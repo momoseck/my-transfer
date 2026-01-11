@@ -1,0 +1,435 @@
+main
+
+import React from "react";
+import ReactDOM from "react-dom/client";
+import App from "./App";
+import "./index.css";
+import { AuthProvider } from "./auth/AuthProvider";
+
+ReactDOM.createRoot(document.getElementById("root")!).render(
+  <React.StrictMode>
+    <AuthProvider>
+      <App />
+    </AuthProvider>
+  </React.StrictMode>
+);
+
+
+________________________________
+
+app
+
+import React from "react";
+import Dashboard from "./pages/Dashboard";
+
+export default function App() {
+  return <Dashboard />;
+}
+
+____
+
+pages/dashbord
+
+import React, { useContext, useEffect, useState } from "react";
+import { AuthContext } from "../auth/AuthContext";
+import { ApplicationDto, fetchMyApps } from "../api/apps";
+import { AppCard } from "../components/AppCard";
+
+type ApiErrorResponse = {
+  code?: string;
+  message?: string;
+  status?: number;
+  path?: string;
+  timestamp?: string;
+  details?: Record<string, any>;
+};
+
+export default function Dashboard() {
+  const auth = useContext(AuthContext);
+  const [apps, setApps] = useState<ApplicationDto[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | undefined>(undefined);
+
+  useEffect(() => {
+    if (!auth.ready) return;
+
+    if (!auth.authenticated) {
+      setApps([]);
+      return;
+    }
+
+    (async () => {
+      setLoading(true);
+      setError(undefined);
+      try {
+        const token = await auth.getValidToken();
+        if (!token) return;
+
+        const data = await fetchMyApps(token);
+        setApps(data);
+      } catch (e: any) {
+        const apiErr: ApiErrorResponse | undefined = e?.response?.data;
+        if (apiErr?.code === "NO_APPLICATION_ASSIGNED") {
+          setError("Aucune application ne vous a été affectée. Contactez l’administrateur.");
+        } else if (apiErr?.message) {
+          setError(apiErr.message);
+        } else {
+          setError("Erreur technique lors du chargement des applications.");
+        }
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [auth.ready, auth.authenticated]);
+
+  if (!auth.ready) {
+    return <div className="p-6 text-slate-700">Chargement…</div>;
+  }
+
+  if (!auth.authenticated) {
+    return (
+      <div className="min-h-screen grid place-items-center bg-slate-50 p-6">
+        <div className="w-full max-w-md rounded-2xl border bg-white p-6 shadow-sm">
+          <h1 className="text-xl font-semibold text-slate-900">SDM Portal</h1>
+          <p className="mt-2 text-sm text-slate-600">
+            Connectez-vous pour accéder à vos applications.
+          </p>
+          <button
+            className="mt-5 w-full rounded-xl bg-slate-900 px-4 py-2.5 text-white hover:opacity-95"
+            onClick={auth.login}
+          >
+            Se connecter
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-slate-50">
+      <header className="sticky top-0 z-10 border-b bg-white">
+        <div className="mx-auto max-w-6xl px-6 py-4 flex items-center justify-between">
+          <div>
+            <div className="text-sm text-slate-500">SDM Portal</div>
+            <div className="font-semibold text-slate-900">
+              Bienvenue {auth.user?.username}
+            </div>
+            <div className="text-xs text-slate-500">
+              Rôles: {(auth.user?.roles ?? []).join(", ") || "—"}
+            </div>
+          </div>
+
+          <button
+            className="rounded-xl border px-4 py-2 text-sm hover:bg-slate-50"
+            onClick={auth.logout}
+          >
+            Déconnexion
+          </button>
+        </div>
+      </header>
+
+      <main className="mx-auto max-w-6xl px-6 py-6">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-slate-900">Applications autorisées</h2>
+          {loading ? <span className="text-sm text-slate-500">Chargement…</span> : null}
+        </div>
+
+        {error ? (
+          <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+            {error}
+          </div>
+        ) : null}
+
+        <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {apps.map((a) => (
+            <AppCard key={a.id} app={a} />
+          ))}
+        </div>
+      </main>
+    </div>
+  );
+}
+
+
+______________
+
+components/Appcard
+
+import React from "react";
+import { ApplicationDto } from "../api/apps";
+
+export function AppCard({ app }: { app: ApplicationDto }) {
+  return (
+    <button
+      type="button"
+      className="w-full text-left rounded-2xl border border-slate-200 bg-white p-4 shadow-sm hover:shadow transition"
+      onClick={() => window.open(app.pwaUrl, "_blank", "noopener,noreferrer")}
+      title="Ouvrir l'application"
+    >
+      <div className="flex items-center gap-3">
+        {app.iconUrl ? (
+          <img src={app.iconUrl} alt="" className="h-10 w-10 rounded-xl" />
+        ) : (
+          <div className="h-10 w-10 rounded-xl bg-slate-100" />
+        )}
+
+        <div className="min-w-0">
+          <div className="font-semibold text-slate-900 truncate">{app.name}</div>
+          <div className="text-xs text-slate-500">{app.code}</div>
+        </div>
+      </div>
+
+      {app.description ? (
+        <p className="mt-3 text-sm text-slate-600 line-clamp-3">{app.description}</p>
+      ) : null}
+
+      <div className="mt-4 text-sm text-blue-600 font-medium">Ouvrir →</div>
+    </button>
+  );
+}
+
+
+_______________
+
+api/apps
+
+import { http } from "./http";
+
+export type ApplicationDto = {
+  id: string;
+  code: string;
+  name: string;
+  description?: string | null;
+  pwaUrl: string;
+  iconUrl?: string | null;
+  active: boolean;
+  displayOrder: number;
+};
+
+export async function fetchMyApps(token: string): Promise<ApplicationDto[]> {
+  const res = await http.get<ApplicationDto[]>("/api/me/apps", {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return res.data;
+}
+
+
+______
+
+api/http.ts
+
+import axios from "axios";
+
+export const http = axios.create({
+  baseURL: import.meta.env.VITE_API_BASE_URL,
+});
+
+
+______________
+
+auth/Authprovider
+
+import React, { useEffect, useMemo } from "react";
+import keycloak from "./keycloak";
+import { AuthContext, useAuthValue } from "./AuthContext";
+import { AuthUser } from "./types";
+
+function extractRoles(tokenParsed: any): string[] {
+  const roles = tokenParsed?.realm_access?.roles ?? [];
+  return Array.isArray(roles) ? roles.map((r: string) => String(r).toLowerCase()) : [];
+}
+
+function buildUser(): AuthUser | undefined {
+  if (!keycloak.tokenParsed) return undefined;
+
+  const tp: any = keycloak.tokenParsed;
+  const subject = tp.sub ?? "";
+  const username = tp.preferred_username ?? tp.name ?? subject;
+  const email = tp.email;
+
+  return {
+    subject,
+    username,
+    email,
+    roles: extractRoles(tp),
+  };
+}
+
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const state = useAuthValue();
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const authenticated = await keycloak.init({
+          onLoad: "check-sso", // ou "login-required" si tu veux forcer login direct
+          pkceMethod: "S256",
+          checkLoginIframe: false,
+        });
+
+        state.setAuthenticated(authenticated);
+        state.setToken(keycloak.token);
+        state.setUser(buildUser());
+      } finally {
+        state.setReady(true);
+      }
+    })();
+
+    // Refresh automatique
+    const interval = window.setInterval(async () => {
+      if (!keycloak.authenticated) return;
+      try {
+        const refreshed = await keycloak.updateToken(60);
+        if (refreshed) {
+          state.setToken(keycloak.token);
+          state.setUser(buildUser());
+        }
+      } catch {
+        // Si refresh échoue, on laisse l’app décider (ex: re-login)
+      }
+    }, 30_000);
+
+    return () => window.clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const ctxValue = useMemo(() => {
+    return {
+      ready: state.ready,
+      authenticated: state.authenticated,
+      token: state.token,
+      user: state.user,
+
+      login: () => keycloak.login(),
+      logout: () => keycloak.logout({ redirectUri: window.location.origin }),
+
+      getValidToken: async () => {
+        if (!keycloak.authenticated) return undefined;
+        await keycloak.updateToken(60);
+        state.setToken(keycloak.token);
+        state.setUser(buildUser());
+        return keycloak.token;
+      },
+    };
+  }, [state.ready, state.authenticated, state.token, state.user]);
+
+  return <AuthContext.Provider value={ctxValue}>{children}</AuthContext.Provider>;
+};
+
+
+______
+
+
+auth/authcontext
+
+import React, { createContext, useMemo, useState } from "react";
+import { AuthUser } from "./types";
+
+export type AuthContextType = {
+  ready: boolean;
+  authenticated: boolean;
+  user?: AuthUser;
+  token?: string;
+
+  login: () => void;
+  logout: () => void;
+  getValidToken: () => Promise<string | undefined>;
+};
+
+export const AuthContext = createContext<AuthContextType>({
+  ready: false,
+  authenticated: false,
+  login: () => {},
+  logout: () => {},
+  getValidToken: async () => undefined,
+});
+
+export function useAuthValue() {
+  const [ready, setReady] = useState(false);
+  const [authenticated, setAuthenticated] = useState(false);
+  const [token, setToken] = useState<string | undefined>(undefined);
+  const [user, setUser] = useState<AuthUser | undefined>(undefined);
+
+  const value = useMemo(
+    () => ({
+      ready,
+      authenticated,
+      token,
+      user,
+      setReady,
+      setAuthenticated,
+      setToken,
+      setUser,
+    }),
+    [ready, authenticated, token, user]
+  );
+
+  return value;
+}
+
+
+__________
+
+auth/types
+
+export type AuthUser = {
+  subject: string;
+  username: string;
+  email?: string;
+  roles: string[];
+};
+
+
+____
+
+auth/keycloak.ts
+
+import Keycloak from "keycloak-js";
+
+const keycloak = new Keycloak({
+  url: import.meta.env.VITE_KEYCLOAK_URL,
+  realm: import.meta.env.VITE_KEYCLOAK_REALM,
+  clientId: import.meta.env.VITE_KEYCLOAK_CLIENT_ID,
+});
+
+export default keycloak;
+
+
+_____
+
+.env
+
+VITE_API_BASE_URL=http://localhost:8080
+VITE_KEYCLOAK_URL=http://localhost:8081
+VITE_KEYCLOAK_REALM=sdm-realm
+VITE_KEYCLOAK_CLIENT_ID=sdm-portal
+
+
+_____
+
+index.css
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+____
+
+
+tailwind.config.js
+
+export default {
+  content: ["./index.html", "./src/**/*.{ts,tsx}"],
+  theme: { extend: {} },
+  plugins: [],
+};
+
+
+_____
+
+npm i keycloak-js axios
+npm i -D tailwindcss postcss autoprefixer
+npx tailwindcss init -p
+
+
