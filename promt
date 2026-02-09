@@ -114,3 +114,8 @@ FORMAT
 
 LIVRABLE FINAL
 Une documentation prête à être utilisée comme socle de refonte, de communication projet et de prise de décision.
+
+
+Analyse ce repository comme un Tech Lead bancaire.
+Identifie les domaines métier, les flux critiques, les batchs, la dette technique
+et propose une documentation de refonte structurée AS-IS / TO-BE.
