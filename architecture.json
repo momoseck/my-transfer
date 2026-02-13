@@ -1,0 +1,34 @@
+{
+  "type": "excalidraw",
+  "version": 2,
+  "source": "chatgpt",
+  "elements": [
+    { "id": "users", "type": "rectangle", "x": 50, "y": 150, "width": 180, "height": 80, "angle": 0, "strokeColor": "#000000", "backgroundColor": "#e1d5e7", "fillStyle": "solid", "strokeWidth": 2, "roughness": 1, "opacity": 100 },
+    { "id": "users_text", "type": "text", "x": 70, "y": 175, "width": 140, "height": 40, "text": "Users\nSales / BO", "fontSize": 16 },
+
+    { "id": "frontend", "type": "rectangle", "x": 300, "y": 150, "width": 220, "height": 80, "strokeColor": "#1a73e8", "backgroundColor": "#d0e2ff", "fillStyle": "solid", "strokeWidth": 2 },
+    { "id": "frontend_text", "type": "text", "x": 320, "y": 175, "width": 180, "height": 40, "text": "Frontend\n(JSF / React)", "fontSize": 16 },
+
+    { "id": "core", "type": "rectangle", "x": 300, "y": 350, "width": 240, "height": 90, "strokeColor": "#2d7600", "backgroundColor": "#d5e8d4", "fillStyle": "solid", "strokeWidth": 2 },
+    { "id": "core_text", "type": "text", "x": 330, "y": 380, "width": 180, "height": 40, "text": "E-Market Core\nService", "fontSize": 16 },
+
+    { "id": "kafka", "type": "rectangle", "x": 650, "y": 350, "width": 240, "height": 90, "strokeColor": "#b58e00", "backgroundColor": "#fff2cc", "fillStyle": "solid", "strokeWidth": 2 },
+    { "id": "kafka_text", "type": "text", "x": 680, "y": 380, "width": 180, "height": 40, "text": "Kafka\nEvent Bus", "fontSize": 16 },
+
+    { "id": "marge", "type": "rectangle", "x": 1000, "y": 350, "width": 220, "height": 90, "strokeColor": "#2d7600", "backgroundColor": "#d5e8d4", "fillStyle": "solid", "strokeWidth": 2 },
+    { "id": "marge_text", "type": "text", "x": 1020, "y": 380, "width": 180, "height": 40, "text": "Marge Service", "fontSize": 16 },
+
+    { "id": "jobrunr", "type": "rectangle", "x": 1000, "y": 520, "width": 220, "height": 90, "strokeColor": "#d07900", "backgroundColor": "#ffe6cc", "fillStyle": "solid", "strokeWidth": 2 },
+    { "id": "jobrunr_text", "type": "text", "x": 1030, "y": 550, "width": 160, "height": 40, "text": "JobRunr\nWorkers", "fontSize": 16 },
+
+    { "id": "cft", "type": "rectangle", "x": 1350, "y": 520, "width": 180, "height": 80, "strokeColor": "#b85450", "backgroundColor": "#f8cecc", "fillStyle": "solid", "strokeWidth": 2 },
+    { "id": "cft_text", "type": "text", "x": 1380, "y": 550, "width": 120, "height": 40, "text": "CFT", "fontSize": 16 },
+
+    { "id": "murex", "type": "rectangle", "x": 1580, "y": 520, "width": 180, "height": 80, "strokeColor": "#b85450", "backgroundColor": "#f8cecc", "fillStyle": "solid", "strokeWidth": 2 },
+    { "id": "murex_text", "type": "text", "x": 1600, "y": 550, "width": 140, "height": 40, "text": "Murex", "fontSize": 16 }
+  ],
+  "appState": {
+    "viewBackgroundColor": "#ffffff"
+  },
+  "files": {}
+}
