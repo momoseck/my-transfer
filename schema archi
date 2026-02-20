@@ -127,3 +127,212 @@
     </mxGraphModel>
   </diagram>
 </mxfile>
+
+
+<mxfile host="app.diagrams.net" modified="2026-02-20T00:00:00.000Z" agent="ChatGPT" version="22.1.0">
+  <diagram id="move-to-caas-springboot" name="Move to CaaS - Spring Boot Java 17">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="900" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <!-- Title -->
+        <mxCell id="t1" value="Move to CaaS (Replatform) - Spring Boot + Java 17" style="text;html=1;align=center;verticalAlign=middle;fontSize=26;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="360" y="20" width="880" height="50" as="geometry"/>
+        </mxCell>
+
+        <!-- App box -->
+        <mxCell id="boxApp" value="APPLICATION REPLATFORMÉE" style="rounded=1;whiteSpace=wrap;html=1;strokeWidth=2;fontStyle=1;align=center;" vertex="1" parent="1">
+          <mxGeometry x="40" y="110" width="560" height="420" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="app" value="Spring Boot App&#10;Java 17&#10;&#10;• Embedded Tomcat/Undertow&#10;• Spring Profiles&#10;• Logs stdout&#10;• Actuator" style="rounded=1;whiteSpace=wrap;html=1;strokeWidth=2;align=left;" vertex="1" parent="1">
+          <mxGeometry x="70" y="170" width="260" height="210" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="act" value="Actuator&#10;&#10;/actuator/health/liveness&#10;/actuator/health/readiness&#10;/actuator/prometheus" style="rounded=1;whiteSpace=wrap;html=1;strokeWidth=2;align=left;" vertex="1" parent="1">
+          <mxGeometry x="350" y="170" width="220" height="160" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="db" value="Base de Données existante&#10;(inchangée)" style="shape=cylinder;whiteSpace=wrap;html=1;strokeWidth=2;align=center;" vertex="1" parent="1">
+          <mxGeometry x="95" y="410" width="210" height="70" as="geometry"/>
+        </mxCell>
+
+        <!-- Build & delivery -->
+        <mxCell id="boxBD" value="BUILD &amp; DELIVERY" style="rounded=1;whiteSpace=wrap;html=1;strokeWidth=2;fontStyle=1;align=center;" vertex="1" parent="1">
+          <mxGeometry x="640" y="110" width="380" height="420" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="build" value="Build (Maven/Gradle)&#10;+ Tests&#10;+ Quality Gates" style="rounded=1;whiteSpace=wrap;html=1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="670" y="160" width="320" height="70" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="img" value="Image Build&#10;(Dockerfile / Buildpacks / S2I)" style="rounded=1;whiteSpace=wrap;html=1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="670" y="245" width="320" height="70" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="cicd" value="CI/CD (Jenkins / GitLab CI)" style="rounded=1;whiteSpace=wrap;html=1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="670" y="330" width="320" height="60" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="reg" value="Registry&#10;(Harbor / Artifactory)" style="rounded=1;whiteSpace=wrap;html=1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="670" y="400" width="320" height="60" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="argo" value="ArgoCD GitOps" style="rounded=1;whiteSpace=wrap;html=1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="670" y="470" width="320" height="50" as="geometry"/>
+        </mxCell>
+
+        <!-- Namespace -->
+        <mxCell id="ns" value="Namespace OpenShift" style="ellipse;whiteSpace=wrap;html=1;strokeWidth=2;align=center;" vertex="1" parent="1">
+          <mxGeometry x="1030" y="260" width="180" height="60" as="geometry"/>
+        </mxCell>
+
+        <!-- OpenShift runtime -->
+        <mxCell id="boxOCP" value="OpenShift / Kubernetes" style="rounded=1;whiteSpace=wrap;html=1;strokeWidth=2;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1230" y="110" width="340" height="420" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="dep" value="Deployment" style="rounded=1;whiteSpace=wrap;html=1;strokeWidth=2;align=center;" vertex="1" parent="1">
+          <mxGeometry x="1260" y="170" width="280" height="55" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="pod" value="Pod(s)&#10;Spring Boot Java 17" style="rounded=1;whiteSpace=wrap;html=1;strokeWidth=2;align=center;" vertex="1" parent="1">
+          <mxGeometry x="1260" y="235" width="280" height="60" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="svc" value="Service" style="rounded=1;whiteSpace=wrap;html=1;strokeWidth=2;align=center;" vertex="1" parent="1">
+          <mxGeometry x="1260" y="305" width="280" height="55" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="route" value="Route / Ingress" style="rounded=1;whiteSpace=wrap;html=1;strokeWidth=2;align=center;" vertex="1" parent="1">
+          <mxGeometry x="1260" y="370" width="280" height="55" as="geometry"/>
+        </mxCell>
+
+        <!-- Config & security -->
+        <mxCell id="boxCS" value="CONFIG &amp; SÉCURITÉ" style="rounded=1;whiteSpace=wrap;html=1;strokeWidth=2;fontStyle=1;align=center;" vertex="1" parent="1">
+          <mxGeometry x="40" y="560" width="740" height="280" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="cm" value="ConfigMap&#10;(app config / env)" style="rounded=1;whiteSpace=wrap;html=1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="70" y="620" width="210" height="70" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="sec" value="Secret&#10;(DB creds, certs)" style="rounded=1;whiteSpace=wrap;html=1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="300" y="620" width="210" height="70" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="rbac" value="RBAC / ServiceAccount" style="rounded=1;whiteSpace=wrap;html=1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="530" y="620" width="230" height="70" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="tls" value="TLS" style="rounded=1;whiteSpace=wrap;html=1;strokeWidth=2;align=center;" vertex="1" parent="1">
+          <mxGeometry x="70" y="710" width="120" height="55" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="netpol" value="NetworkPolicy&#10;(optionnel)" style="rounded=1;whiteSpace=wrap;html=1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="210" y="710" width="170" height="55" as="geometry"/>
+        </mxCell>
+
+        <!-- Observability -->
+        <mxCell id="boxOBS" value="OBSERVABILITÉ" style="rounded=1;whiteSpace=wrap;html=1;strokeWidth=2;fontStyle=1;align=center;" vertex="1" parent="1">
+          <mxGeometry x="820" y="560" width="750" height="280" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="logs" value="Logs&#10;(ELK / Loki)" style="rounded=1;whiteSpace=wrap;html=1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="850" y="620" width="210" height="70" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="prom" value="Metrics&#10;(Prometheus)" style="rounded=1;whiteSpace=wrap;html=1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="1080" y="620" width="210" height="70" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="graf" value="Dashboards&#10;(Grafana)" style="rounded=1;whiteSpace=wrap;html=1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="1310" y="620" width="210" height="70" as="geometry"/>
+        </mxCell>
+
+        <!-- Edges -->
+        <mxCell id="e1" style="endArrow=block;html=1;strokeWidth=2;" edge="1" parent="1" source="app" target="db">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="e2" style="endArrow=block;html=1;strokeWidth=2;" edge="1" parent="1" source="app" target="act">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="e3" value="source" style="endArrow=block;html=1;strokeWidth=2;" edge="1" parent="1" source="app" target="build">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="e4" style="endArrow=block;html=1;strokeWidth=2;" edge="1" parent="1" source="build" target="img">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="e5" style="endArrow=block;html=1;strokeWidth=2;" edge="1" parent="1" source="img" target="cicd">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="e6" value="push" style="endArrow=block;html=1;strokeWidth=2;" edge="1" parent="1" source="cicd" target="reg">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="e7" style="endArrow=block;html=1;strokeWidth=2;" edge="1" parent="1" source="reg" target="argo">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="e8" value="sync manifests" style="endArrow=block;html=1;strokeWidth=2;" edge="1" parent="1" source="argo" target="ns">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="e9" style="endArrow=block;html=1;strokeWidth=2;" edge="1" parent="1" source="ns" target="dep">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="e10" style="endArrow=block;html=1;strokeWidth=2;" edge="1" parent="1" source="dep" target="pod">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="e11" style="endArrow=block;html=1;strokeWidth=2;" edge="1" parent="1" source="pod" target="svc">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="e12" style="endArrow=block;html=1;strokeWidth=2;" edge="1" parent="1" source="svc" target="route">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="e13" style="dashed=1;endArrow=block;html=1;strokeWidth=2;" edge="1" parent="1" source="cm" target="pod">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="e14" style="dashed=1;endArrow=block;html=1;strokeWidth=2;" edge="1" parent="1" source="sec" target="pod">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="e15" style="dashed=1;endArrow=block;html=1;strokeWidth=2;" edge="1" parent="1" source="rbac" target="boxOCP">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="e16" style="dashed=1;endArrow=block;html=1;strokeWidth=2;" edge="1" parent="1" source="tls" target="route">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="e17" style="dashed=1;endArrow=block;html=1;strokeWidth=2;" edge="1" parent="1" source="netpol" target="boxOCP">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="e18" style="dashed=1;endArrow=block;html=1;strokeWidth=2;" edge="1" parent="1" source="pod" target="logs">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="e19" value="scrape" style="dashed=1;endArrow=block;html=1;strokeWidth=2;" edge="1" parent="1" source="act" target="prom">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="e20" style="dashed=1;endArrow=block;html=1;strokeWidth=2;" edge="1" parent="1" source="prom" target="graf">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
