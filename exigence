@@ -1,0 +1,61 @@
+Exigences (Move to CaaS – Spring Boot Java 17 sur OpenShift)
+
+2.1 Exigences de plateforme d’hébergement (CaaS / OpenShift)
+	•	L’application est déployée sous forme de conteneur dans un namespace OpenShift dédié.
+	•	Déploiement via Deployment (ou DeploymentConfig selon standard) avec au moins 2 replicas si besoin de HA.
+	•	Définition obligatoire de requests/limits CPU & mémoire.
+	•	Mise en place des readiness/liveness probes (et startupProbe si démarrage long).
+	•	Exposition réseau :
+	•	Service interne obligatoire (DNS stable).
+	•	Route OpenShift (ou Ingress) uniquement si exposition externe requise.
+	•	Stockage :
+	•	Application stateless (pas d’écriture locale persistante).
+	•	Si besoin, utilisation d’un PVC (volumes) avec règles de sauvegarde.
+
+2.2 Exigences runtime applicatif
+	•	Runtime : Java 17.
+	•	Framework : Spring Boot (packaging jar exécutable).
+	•	Gestion de configuration via ConfigMap / Secrets + Spring profiles.
+	•	Endpoints d’exploitation activés :
+	•	/actuator/health/liveness
+	•	/actuator/health/readiness
+	•	/actuator/metrics et/ou /actuator/prometheus (selon stack)
+	•	Logs en stdout/stderr (format exploitable, idéalement structuré).
+
+2.3 Exigences CI/CD & gestion des artefacts
+	•	Build et tests automatisés (Maven/Gradle) via Jenkins/GitLab CI.
+	•	Construction d’image via Dockerfile / Buildpacks / S2I (selon standard).
+	•	Stockage images dans Registry (Harbor/Artifactory) avec versionning (tag/digest).
+	•	Déploiement via GitOps (ArgoCD) : manifests versionnés (Kustomize/Helm).
+
+2.4 Exigences sécurité
+	•	Accès applicatif via TLS (terminaison edge ou re-encrypt selon politique).
+	•	Contrôle d’accès via RBAC + ServiceAccount minimal.
+	•	Secrets (DB password, keystore, tokens…) dans Secrets (pas en clair dans Git).
+	•	Politique réseau : NetworkPolicy (si exigée) pour restreindre les flux.
+	•	Scan des images (vulnérabilités) selon exigences sécurité.
+
+2.5 Exigences base de données (Oracle)
+	•	Base Oracle inchangée (Move), accessible depuis OpenShift (réseau/pare-feu).
+	•	Connexion via datasource Spring (pooling, timeouts, retries).
+	•	Scripts DB versionnés (Flyway/Liquibase si retenu) + stratégie de rollback.
+
+2.6 Exigences observabilité & exploitation
+	•	Monitoring : métriques Prometheus + dashboards (Grafana) si stack présente.
+	•	Logs centralisés (ELK/Loki).
+	•	Alerting sur :
+	•	redémarrages pods, erreurs 5xx, latence, saturation CPU/mémoire, DB timeouts.
+	•	Runbook d’exploitation : procédures de restart, montée de version, rollbacks.
+
+2.7 Exigences performance & disponibilité
+	•	Objectifs (à préciser) : disponibilité, temps de réponse, volumétrie.
+	•	Scalabilité : HPA si applicable (CPU/metrics).
+	•	Stratégie de déploiement : rolling update, zéro-downtime si nécessaire.
+
+⸻
+
+Remarque sur ton screenshot
+
+Ton “2.1 Caractéristiques du serveur d’application : JBoss V7 + Java 1.6” devient donc :
+✅ “Exigences de runtime container + Spring Boot Java 17 + Probes + Actuator + Ressources + CI/CD + GitOps + Sécurité”
+et non plus une description de machine.
