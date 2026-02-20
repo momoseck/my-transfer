@@ -1,0 +1,77 @@
+@startuml
+title Move to CaaS (Replatform) : Legacy -> Spring Boot Java 17 -> OpenShift
+
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam defaultFontName Arial
+left to right direction
+
+' ====== Application (Replatform) ======
+package "Application replatformée (Move to CaaS)" as APPPKG {
+  rectangle "Spring Boot App\nJava 17\n\n- Embedded Tomcat/Undertow\n- Spring Profiles\n- Logs stdout\n- Actuator" as APP
+  rectangle "Actuator Endpoints\n\n/actuator/health/liveness\n/actuator/health/readiness\n/actuator/prometheus" as ACT
+  APP --> ACT : expose
+  database "Base de Données existante\n(legacy / inchangée)" as DB
+  APP --> DB : JDBC / JPA
+}
+
+' ====== Build & Delivery ======
+package "Build & Delivery" as BD {
+  rectangle "Build\n(Maven/Gradle)\n+ Tests\n+ Quality Gates" as BUILD
+  rectangle "Image Build\n(Dockerfile / Buildpacks / S2I)" as IMG
+  rectangle "CI/CD Pipeline\n(Jenkins / GitLab CI)" as CICD
+  rectangle "Registry\n(Harbor / Artifactory)" as REG
+  rectangle "ArgoCD\nGitOps" as ARGO
+
+  BUILD --> IMG
+  IMG --> CICD
+  CICD --> REG : push image
+  ARGO <-- REG : image reference (tag/digest)
+}
+
+APP --> BUILD : source code
+
+' ====== OpenShift Runtime ======
+cloud "Namespace OpenShift" as NS
+
+package "OpenShift / Kubernetes" as OCP {
+  node "Deployment" as DEP
+  node "Pod(s)\nSpring Boot Java 17" as POD
+  node "Service" as SVC
+  node "Route / Ingress" as ROUTE
+
+  DEP --> POD
+  POD --> SVC
+  SVC --> ROUTE
+}
+
+ARGO --> NS : sync manifests (Kustomize/Helm)
+NS --> DEP
+
+' ====== Config & Security ======
+package "Config & Sécurité" as CS {
+  rectangle "ConfigMap\n(application.yml / env)" as CM
+  rectangle "Secret\n(DB creds, certs)" as SEC
+  rectangle "RBAC / ServiceAccount" as RBAC
+  rectangle "TLS" as TLS
+  rectangle "NetworkPolicy (optionnel)" as NET
+
+  CM --> POD
+  SEC --> POD
+  RBAC --> OCP
+  TLS --> ROUTE
+  NET --> OCP
+}
+
+' ====== Observability ======
+package "Observabilité" as OBS {
+  rectangle "Logs\n(ELK / Loki)" as LOGS
+  rectangle "Metrics\n(Prometheus)" as PROM
+  rectangle "Dashboards\n(Grafana)" as GRAF
+
+  POD --> LOGS : stdout/stderr
+  ACT --> PROM : scrape /actuator/prometheus
+  PROM --> GRAF
+}
+
+@enduml
