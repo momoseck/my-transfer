@@ -1,0 +1,162 @@
+# Contenu final du DAT Move to CaaS (Version mise à jour)
+
+content = """
+DOSSIER D’ARCHITECTURE TECHNIQUE
+Plateforme de Cotation E-TRADE
+Version Move to CaaS – Spring Boot + Java 17
+
+=====================================================================
+1. CONTEXTE ET OBJECTIFS
+=====================================================================
+
+Le présent document décrit l’architecture cible dans le cadre de la
+migration Move to CaaS de la plateforme E-TRADE.
+
+Objectifs :
+- Migration du runtime JBoss vers Spring Boot Java 17
+- Containerisation de l’application
+- Déploiement sur plateforme OpenShift
+- Mise en place d’une démarche GitOps (ArgoCD)
+- Standardisation exploitation, sécurité et observabilité
+
+Hors périmètre :
+- Refactorisation fonctionnelle majeure
+- Passage en microservices (architecture monolithique conservée)
+
+
+=====================================================================
+2. DESCRIPTION LOGICIELLE DU SYSTÈME
+=====================================================================
+
+Architecture applicative :
+- Application Spring Boot (Java 17)
+- Packaging : image container Docker
+- Application stateless
+- Configuration externalisée (ConfigMap / Secrets)
+- Endpoints Actuator activés :
+    /actuator/health/liveness
+    /actuator/health/readiness
+    /actuator/prometheus
+
+Base de données :
+- Oracle (inchangée)
+- Connexion via datasource Spring Boot (pooling configuré)
+
+
+=====================================================================
+3. DESCRIPTION TECHNIQUE
+=====================================================================
+
+3.1 Runtime applicatif
+- Java 17
+- Spring Boot
+- Embedded server (Tomcat/Undertow)
+- Logs stdout/stderr
+- Gestion des profils Spring
+
+3.2 Infrastructure CaaS
+- Orchestrateur : OpenShift (Kubernetes)
+- Déploiement via objet Deployment (apps/v1)
+- Service interne Kubernetes
+- Route OpenShift (si exposition externe requise)
+- HPA (Horizontal Pod Autoscaler) si nécessaire
+- Requests / Limits CPU & Mémoire définis
+
+3.3 Sécurité
+- TLS (terminaison edge ou re-encrypt)
+- RBAC + ServiceAccount dédié
+- Secrets Kubernetes pour credentials
+- Scan de vulnérabilités des images
+
+3.4 Observabilité
+- Logs centralisés (ELK / Loki)
+- Métriques Prometheus
+- Dashboards Grafana
+- Alerting sur erreurs et saturation ressources
+
+3.5 CI/CD & GitOps
+- Build Maven/Gradle
+- Construction image Docker / Buildpacks
+- Registry (Harbor / Artifactory)
+- Déploiement via ArgoCD
+- Manifests versionnés (Kustomize base/overlays)
+- Rollback via Git
+
+
+=====================================================================
+4. PRODUITS LOGICIELS
+=====================================================================
+
+- Java 17
+- Spring Boot
+- OpenShift
+- ArgoCD
+- Jenkins / GitLab CI
+- Harbor (Registry)
+- Prometheus / Grafana
+- ELK / Loki
+- Oracle Database
+
+
+=====================================================================
+5. INFRASTRUCTURE
+=====================================================================
+
+- Cluster OpenShift mutualisé
+- Namespace dédié par environnement
+- Aucun serveur physique dédié au projet
+- Scalabilité horizontale via replicas
+- Load balancing natif Kubernetes
+- Stockage via PVC si requis
+
+
+=====================================================================
+6. ENVIRONNEMENTS
+=====================================================================
+
+Environnements gérés par namespaces :
+
+- DEV  : namespace dev-xxx
+- TEST : namespace test-xxx
+- REC  : namespace rec-xxx
+- PROD : namespace prod-xxx
+
+Déploiement automatisé via GitOps (ArgoCD).
+Chaque environnement possède un overlay Kustomize dédié.
+
+
+=====================================================================
+7. STRATÉGIE DE DÉPLOIEMENT
+=====================================================================
+
+1. Commit du code
+2. Build automatique
+3. Construction image container
+4. Push vers registry
+5. Mise à jour du tag image dans overlay
+6. Synchronisation ArgoCD
+7. Rolling update automatique
+8. Rollback possible via version Git précédente
+
+
+=====================================================================
+8. CONCLUSION
+=====================================================================
+
+L’architecture cible repose sur une plateforme CaaS OpenShift,
+avec une application Spring Boot Java 17 containerisée,
+déployée via GitOps, conforme aux standards modernes de sécurité,
+observabilité et scalabilité.
+
+La migration supprime la dépendance aux serveurs Windows,
+à JBoss et aux déploiements manuels (WAR / scripts BAT),
+au profit d’un modèle cloud-native maîtrisé.
+"""
+
+# Sauvegarde en fichier TXT
+file_path = "/mnt/data/DAT_Move_to_CaaS_Etrade_Final.txt"
+
+import pypandoc
+pypandoc.convert_text(content, 'plain', format='md', outputfile=file_path, extra_args=['--standalone'])
+
+file_path
