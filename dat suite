@@ -160,3 +160,252 @@ import pypandoc
 pypandoc.convert_text(content, 'plain', format='md', outputfile=file_path, extra_args=['--standalone'])
 
 file_path
+
+Parfait 👌 on va faire ça proprement, section par section, en gardant la même numérotation pour ton DAT (important en contexte bancaire).
+
+Ton screenshot montre :
+	•		3.	Description logicielle du système
+	•		4.	Description technique
+	•	4.1 Schéma d’architecture logique
+	•	4.2 Schéma d’architecture technique
+	•	4.3 Produits logiciels
+	•	4.4 Composants matériels
+	•	4.5 Gestion des changements
+	•		5.	Architecture réseau
+
+👉 Je te dis exactement par quoi les remplacer en version Move to CaaS.
+
+⸻
+
+✅ 3. Description logicielle du système
+
+❌ Ancien contenu
+	•	J2EE
+	•	JBoss
+	•	WAR
+	•	Windows Server
+
+⸻
+
+✅ Remplacer par :
+
+3. Description logicielle du système (Cible Move to CaaS)
+	•	Application développée en Spring Boot (Java 17)
+	•	Architecture monolithe containerisé
+	•	Packaging : image Docker
+	•	Application stateless
+	•	Configuration externalisée (ConfigMap / Secrets)
+	•	Actuator activé (health, metrics)
+	•	Déploiement automatisé via GitOps
+
+⸻
+
+✅ 4. Description technique
+
+❌ Ancien
+	•	Serveur Windows 2008
+	•	JBoss
+	•	HTTP interne
+
+⸻
+
+✅ Nouveau contenu :
+
+4. Description technique (Architecture CaaS)
+
+4.1 Runtime applicatif
+	•	Java 17
+	•	Spring Boot
+	•	Embedded Tomcat
+	•	Actuator (liveness/readiness)
+	•	Logs stdout
+
+4.2 Infrastructure
+	•	OpenShift
+	•	Deployment (apps/v1)
+	•	Service Kubernetes
+	•	Route OpenShift
+	•	HPA (si besoin)
+	•	Requests / Limits CPU-Memory
+
+⸻
+
+✅ 4.1 Schéma d’architecture logique
+
+❌ Ancien
+
+Client Web → Serveur JBoss → Base Oracle
+
+⸻
+
+✅ Nouveau schéma logique
+
+Client Web
+→ Route OpenShift
+→ Service Kubernetes
+→ Pod(s) Spring Boot
+→ Oracle DB
+	•	Flux vers :
+
+	•	LDAP
+	•	SMTP
+	•	Murex
+	•	Provider
+
+⸻
+
+✅ 4.2 Schéma d’architecture technique
+
+❌ Ancien
+
+VM1 / VM2 / Backup serveur / Windows
+
+⸻
+
+✅ Nouveau schéma technique
+
+Cluster OpenShift
+→ Namespace dédié
+→ Deployment
+→ Replica Pods
+→ HPA
+→ Service
+→ Route
+
+Base Oracle externe (inchangée)
+
+⸻
+
+✅ 4.3 Produits logiciels
+
+❌ Supprimer :
+	•	Windows Server 2008
+	•	JBoss
+	•	Nagios (si remplacé)
+
+⸻
+
+✅ Remplacer par :
+Catégorie
+Produit
+Runtime
+Java 17
+Framework
+Spring Boot
+Container
+Docker
+Orchestrateur
+OpenShift
+GitOps
+ArgoCD
+CI/CD
+Jenkins / GitLab
+Monitoring
+Prometheus
+Logs
+ELK
+DB
+
+
+
+
+—---------
+de Cotation E-TRADE
+Version Move to CaaS – Spring Boot Java 17
+
+1. Contexte et objectifs
+
+Contexte :
+Migration de l’architecture JBoss / Windows Server vers une architecture containerisée Spring Boot Java 17 sur OpenShift.
+
+Objectifs :
+- Containerisation de l’application
+- Déploiement sur OpenShift
+- Mise en place du GitOps (ArgoCD)
+- Amélioration de la scalabilité, sécurité et observabilité
+- Suppression des déploiements manuels WAR
+
+2. Description fonctionnelle
+
+L’application permet la gestion des cotations et l’interaction avec les systèmes externes :
+- Provider
+- Murex
+- TI
+- LDAP
+- SMTP
+
+Aucune modification fonctionnelle dans cette phase.
+
+3. Description logicielle du système
+
+Architecture cible :
+- Spring Boot (Java 17)
+- Application stateless
+- Packaging image Docker
+- Configuration via ConfigMap / Secrets
+- Actuator activé (health, metrics)
+- Logs via stdout
+
+Base de données :
+- Oracle (inchangée)
+
+4. Description technique
+
+Runtime :
+- Java 17
+- Spring Boot
+- Embedded Tomcat
+
+Infrastructure :
+- OpenShift (Kubernetes)
+- Deployment (apps/v1)
+- Service Kubernetes
+- Route OpenShift
+- HPA si requis
+- Resources CPU/Mémoire définies
+
+5. Sécurité
+
+- TLS (edge / re-encrypt)
+- RBAC namespace dédié
+- Secrets Kubernetes
+- Scan de vulnérabilités image
+
+6. Observabilité
+
+- Logs centralisés (ELK / Loki)
+- Metrics (Prometheus)
+- Dashboards (Grafana)
+- Alerting
+
+7. CI/CD & GitOps
+
+Pipeline :
+1. Commit Git
+2. Build Maven
+3. Build image Docker
+4. Push registry
+5. Synchronisation ArgoCD
+6. Rolling update
+
+8. Environnements
+
+Namespaces :
+- DEV
+- TEST
+- REC
+- PROD
+
+Overlay Kustomize par environnement.
+
+9. Stratégie de déploiement
+
+- Rolling update
+- Zéro downtime si replicas > 1
+- Rollback via version Git
+
+10. Conclusion
+
+Architecture moderne containerisée conforme aux standards CaaS.
+Suppression des VM dédiées et des déploiements manuels.
+
