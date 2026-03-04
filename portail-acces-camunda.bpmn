@@ -1,0 +1,420 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:color="http://www.omg.org/spec/BPMN/non-normative/color/1.0" id="Definitions_PortalAccess" targetNamespace="http://example.com/portal-access" exporter="Camunda Modeler" exporterVersion="5.18.0">
+  <bpmn:process id="Process_Portal_Access" name="Portail - Accès Applications &#38; Services" isExecutable="true">
+    <bpmn:startEvent id="Start_Login" name="Connexion au portail" />
+    <bpmn:sequenceFlow id="Flow_1" sourceRef="Start_Login" targetRef="Task_Authenticate" />
+    <bpmn:userTask id="Task_Authenticate" name="S&#39;authentifier (Auth3S)" />
+    <bpmn:sequenceFlow id="Flow_2" sourceRef="Task_Authenticate" targetRef="Task_CheckRights" />
+    <bpmn:serviceTask id="Task_CheckRights" name="Vérifier droits existants" camunda:type="external" camunda:topic="portal.checkRights" />
+    <bpmn:sequenceFlow id="Flow_3" sourceRef="Task_CheckRights" targetRef="Gateway_HasAccess" />
+    <bpmn:sequenceFlow id="Flow_4_yes" sourceRef="Gateway_HasAccess" targetRef="Task_OpenApp">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${hasAccess == true}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_4_no" sourceRef="Gateway_HasAccess" targetRef="Task_SelectCatalog">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${hasAccess == false}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:userTask id="Task_OpenApp" name="Accéder à l&#39;application / Service 3s" />
+    <bpmn:sequenceFlow id="Flow_5" sourceRef="Task_OpenApp" targetRef="End_DirectAccess" />
+    <bpmn:endEvent id="End_DirectAccess" name="Fin - Accès direct" />
+    <bpmn:userTask id="Task_SelectCatalog" name="Ouvrir catalogue (Apps / Services)" />
+    <bpmn:sequenceFlow id="Flow_6" sourceRef="Task_SelectCatalog" targetRef="Gateway_RequestType" />
+    <bpmn:exclusiveGateway id="Gateway_RequestType" name="Type de demande" />
+    <bpmn:sequenceFlow id="Flow_7_app" sourceRef="Gateway_RequestType" targetRef="Task_SelectApplication">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${requestType == "APP"}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_7_srv" sourceRef="Gateway_RequestType" targetRef="Task_SelectService">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${requestType == "SERVICE"}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:userTask id="Task_SelectApplication" name="Sélectionner application" />
+    <bpmn:sequenceFlow id="Flow_8" sourceRef="Task_SelectApplication" targetRef="Task_SubmitAppRequest" />
+    <bpmn:userTask id="Task_SubmitAppRequest" name="Soumettre demande accès application" />
+    <bpmn:sequenceFlow id="Flow_9" sourceRef="Task_SubmitAppRequest" targetRef="Task_RegisterAppRequest" />
+    <bpmn:serviceTask id="Task_RegisterAppRequest" name="Enregistrer demande (portail)" camunda:type="external" camunda:topic="portal.registerAppRequest" />
+    <bpmn:sequenceFlow id="Flow_10" sourceRef="Task_RegisterAppRequest" targetRef="Task_ManagerValidateApp" />
+    <bpmn:userTask id="Task_ManagerValidateApp" name="Validation Manager (App)" />
+    <bpmn:sequenceFlow id="Flow_11" sourceRef="Task_ManagerValidateApp" targetRef="Gateway_ManagerDecisionApp" />
+    <bpmn:exclusiveGateway id="Gateway_ManagerDecisionApp" name="Manager OK ?" />
+    <bpmn:sequenceFlow id="Flow_12_mgr_ok" sourceRef="Gateway_ManagerDecisionApp" targetRef="Task_ITValidateApp">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${managerApproved == true}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_12_mgr_no" sourceRef="Gateway_ManagerDecisionApp" targetRef="Task_NotifyRejected">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${managerApproved == false}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:userTask id="Task_ITValidateApp" name="Validation IT (App)" />
+    <bpmn:sequenceFlow id="Flow_13" sourceRef="Task_ITValidateApp" targetRef="Gateway_ITDecisionApp" />
+    <bpmn:exclusiveGateway id="Gateway_ITDecisionApp" name="IT OK ?" />
+    <bpmn:sequenceFlow id="Flow_14_it_ok" sourceRef="Gateway_ITDecisionApp" targetRef="Gateway_AppType">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${itApproved == true}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_14_it_no" sourceRef="Gateway_ITDecisionApp" targetRef="Task_NotifyRejected">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${itApproved == false}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:exclusiveGateway id="Gateway_AppType" name="Type application ?">
+      <bpmn:outgoing>Flow_0w8q5tp</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="Flow_15_client" sourceRef="Gateway_AppType" targetRef="Task_InstallClient">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${appType == "CLIENT_LOURD"}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_16" sourceRef="Task_InstallClient" targetRef="Task_ConfigWorkstation" />
+    <bpmn:serviceTask id="Task_UpdatePortalRights" name="Mettre à jour droits portail" camunda:type="external" camunda:topic="portal.updateRights">
+      <bpmn:incoming>Flow_0w8q5tp</bpmn:incoming>
+      <bpmn:incoming>Flow_0q3qgef</bpmn:incoming>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="Flow_19" sourceRef="Task_UpdatePortalRights" targetRef="Task_NotifyGranted" />
+    <bpmn:userTask id="Task_SelectService" name="Sélectionner service (API / interfaçage)" />
+    <bpmn:sequenceFlow id="Flow_20" sourceRef="Task_SelectService" targetRef="Task_SubmitServiceRequest" />
+    <bpmn:userTask id="Task_SubmitServiceRequest" name="Soumettre demande accès service" />
+    <bpmn:sequenceFlow id="Flow_21" sourceRef="Task_SubmitServiceRequest" targetRef="Task_RegisterServiceRequest" />
+    <bpmn:serviceTask id="Task_RegisterServiceRequest" name="Enregistrer demande (portail)" camunda:type="external" camunda:topic="portal.registerServiceRequest" />
+    <bpmn:sequenceFlow id="Flow_22" sourceRef="Task_RegisterServiceRequest" targetRef="Task_ManagerValidateService" />
+    <bpmn:userTask id="Task_ManagerValidateService" name="Validation Manager (Service)" />
+    <bpmn:sequenceFlow id="Flow_23" sourceRef="Task_ManagerValidateService" targetRef="Gateway_ManagerDecisionService" />
+    <bpmn:exclusiveGateway id="Gateway_ManagerDecisionService" name="Manager OK ?" />
+    <bpmn:sequenceFlow id="Flow_24_mgr_ok" sourceRef="Gateway_ManagerDecisionService" targetRef="Task_ITValidateService">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${managerApproved == true}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_24_mgr_no" sourceRef="Gateway_ManagerDecisionService" targetRef="Task_NotifyRejected">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${managerApproved == false}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:userTask id="Task_ITValidateService" name="Validation IT (Service)" />
+    <bpmn:sequenceFlow id="Flow_25" sourceRef="Task_ITValidateService" targetRef="Gateway_ITDecisionService" />
+    <bpmn:exclusiveGateway id="Gateway_ITDecisionService" name="IT OK ?" />
+    <bpmn:sequenceFlow id="Flow_26_it_ok" sourceRef="Gateway_ITDecisionService" targetRef="Task_CreateContract">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${itApproved == true}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_26_it_no" sourceRef="Gateway_ITDecisionService" targetRef="Task_NotifyRejected">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${itApproved == false}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:serviceTask id="Task_CreateContract" name="Créer contrat / règles d&#39;accès" camunda:type="external" camunda:topic="it.createContract" />
+    <bpmn:sequenceFlow id="Flow_27" sourceRef="Task_CreateContract" targetRef="Task_ProvisionCredentials" />
+    <bpmn:serviceTask id="Task_ProvisionCredentials" name="Provisionner credentials" camunda:type="external" camunda:topic="it.provisionCredentials" />
+    <bpmn:sequenceFlow id="Flow_28" sourceRef="Task_ProvisionCredentials" targetRef="Task_ProvideDocs" />
+    <bpmn:serviceTask id="Task_ProvideDocs" name="Fournir documentation intégration" camunda:type="external" camunda:topic="it.provideDocs" />
+    <bpmn:sequenceFlow id="Flow_29" sourceRef="Task_ProvideDocs" targetRef="Task_UpdatePortalRights" />
+    <bpmn:serviceTask id="Task_NotifyRejected" name="Notifier rejet" camunda:type="external" camunda:topic="portal.notifyRejected" />
+    <bpmn:sequenceFlow id="Flow_30" sourceRef="Task_NotifyRejected" targetRef="End_Rejected" />
+    <bpmn:endEvent id="End_Rejected" name="Fin -Demande rejetée" />
+    <bpmn:serviceTask id="Task_NotifyGranted" name="Notifier accès accordé" camunda:type="external" camunda:topic="portal.notifyGranted" />
+    <bpmn:sequenceFlow id="Flow_31" sourceRef="Task_NotifyGranted" targetRef="End_Granted" />
+    <bpmn:endEvent id="End_Granted" name="Fin - Accès accordé" />
+    <bpmn:manualTask id="Task_InstallClient" name="Installer client lourd">
+      <bpmn:incoming>Flow_15_client</bpmn:incoming>
+      <bpmn:outgoing>Flow_16</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:manualTask id="Task_ConfigWorkstation" name="Configurer poste">
+      <bpmn:incoming>Flow_16</bpmn:incoming>
+      <bpmn:outgoing>Flow_0q3qgef</bpmn:outgoing>
+    </bpmn:manualTask>
+    <bpmn:sequenceFlow id="Flow_0w8q5tp" sourceRef="Gateway_AppType" targetRef="Task_UpdatePortalRights" />
+    <bpmn:sequenceFlow id="Flow_0q3qgef" sourceRef="Task_ConfigWorkstation" targetRef="Task_UpdatePortalRights" />
+    <bpmn:inclusiveGateway id="Gateway_HasAccess" name="Accès déjà accordé ?">
+      <bpmn:incoming>Flow_3</bpmn:incoming>
+      <bpmn:outgoing>Flow_4_yes</bpmn:outgoing>
+      <bpmn:outgoing>Flow_4_no</bpmn:outgoing>
+    </bpmn:inclusiveGateway>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_Portal_Access">
+      <bpmndi:BPMNShape id="Shape_Start_Login" bpmnElement="Start_Login">
+        <dc:Bounds x="170" y="260" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="154" y="296" width="68" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_Authenticate" bpmnElement="Task_Authenticate">
+        <dc:Bounds x="250" y="238" width="180" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_CheckRights" bpmnElement="Task_CheckRights">
+        <dc:Bounds x="470" y="238" width="200" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_ITValidateApp" bpmnElement="Task_ITValidateApp">
+        <dc:Bounds x="2410" y="240" width="220" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Gateway_ITDecisionApp" bpmnElement="Gateway_ITDecisionApp" isMarkerVisible="true">
+        <dc:Bounds x="2670" y="255" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2676" y="231" width="38" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Gateway_AppType" bpmnElement="Gateway_AppType" isMarkerVisible="true">
+        <dc:Bounds x="2780" y="255" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2839.5" y="273" width="89" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_OpenApp" bpmnElement="Task_OpenApp">
+        <dc:Bounds x="650" y="80" width="240" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_SelectCatalog" bpmnElement="Task_SelectCatalog">
+        <dc:Bounds x="650" y="410" width="240" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Gateway_RequestType" bpmnElement="Gateway_RequestType" isMarkerVisible="true">
+        <dc:Bounds x="985" y="315" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1044.5" y="333" width="89" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_SelectService" bpmnElement="Task_SelectService">
+        <dc:Bounds x="1040" y="440" width="260" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_SubmitServiceRequest" bpmnElement="Task_SubmitServiceRequest">
+        <dc:Bounds x="1440" y="440" width="260" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0zgieqv_di" bpmnElement="Task_InstallClient">
+        <dc:Bounds x="2740" y="100" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1a3b1tb_di" bpmnElement="Task_ConfigWorkstation">
+        <dc:Bounds x="3070" y="160" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_UpdatePortalRights" bpmnElement="Task_UpdatePortalRights">
+        <dc:Bounds x="2960" y="323" width="240" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_NotifyGranted" bpmnElement="Task_NotifyGranted">
+        <dc:Bounds x="3340" y="323" width="220" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_End_Granted" bpmnElement="End_Granted">
+        <dc:Bounds x="3692" y="345" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3671" y="381" width="79" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_End_DirectAccess" bpmnElement="End_DirectAccess">
+        <dc:Bounds x="1012" y="102" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="988" y="138" width="85" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_126g893_di" bpmnElement="Gateway_HasAccess">
+        <dc:Bounds x="720" y="253" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="780" y="264" width="54" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_SubmitAppRequest" bpmnElement="Task_SubmitAppRequest">
+        <dc:Bounds x="1180" y="80" width="240" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_SelectApplication" bpmnElement="Task_SelectApplication">
+        <dc:Bounds x="1110" y="220" width="220" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_RegisterAppRequest" bpmnElement="Task_RegisterAppRequest">
+        <dc:Bounds x="1400" y="220" width="240" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_ManagerValidateApp" bpmnElement="Task_ManagerValidateApp">
+        <dc:Bounds x="1750" y="220" width="220" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Gateway_ManagerDecisionApp" bpmnElement="Gateway_ManagerDecisionApp" isMarkerVisible="true">
+        <dc:Bounds x="2075" y="235" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2064" y="211" width="72" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_ITValidateService" bpmnElement="Task_ITValidateService">
+        <dc:Bounds x="2300" y="620" width="240" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_RegisterServiceRequest" bpmnElement="Task_RegisterServiceRequest">
+        <dc:Bounds x="1580" y="323" width="260" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_ManagerValidateService" bpmnElement="Task_ManagerValidateService">
+        <dc:Bounds x="1780" y="450" width="240" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Gateway_ManagerDecisionService" bpmnElement="Gateway_ManagerDecisionService" isMarkerVisible="true">
+        <dc:Bounds x="2075" y="565" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2064" y="541" width="72" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_NotifyRejected" bpmnElement="Task_NotifyRejected">
+        <dc:Bounds x="2070" y="390" width="220" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_End_Rejected" bpmnElement="End_Rejected">
+        <dc:Bounds x="2250" y="535" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2224" y="571" width="89" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Gateway_ITDecisionService" bpmnElement="Gateway_ITDecisionService" isMarkerVisible="true">
+        <dc:Bounds x="2385" y="405" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2391" y="381" width="38" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_CreateContract" bpmnElement="Task_CreateContract">
+        <dc:Bounds x="2520" y="410" width="240" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_ProvideDocs" bpmnElement="Task_ProvideDocs">
+        <dc:Bounds x="2940" y="496" width="260" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Shape_Task_ProvisionCredentials" bpmnElement="Task_ProvisionCredentials">
+        <dc:Bounds x="2610" y="610" width="260" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Edge_Flow_1" bpmnElement="Flow_1">
+        <di:waypoint x="206" y="278" />
+        <di:waypoint x="250" y="278" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_2" bpmnElement="Flow_2">
+        <di:waypoint x="430" y="278" />
+        <di:waypoint x="470" y="278" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_3" bpmnElement="Flow_3">
+        <di:waypoint x="670" y="278" />
+        <di:waypoint x="720" y="278" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_4_yes" bpmnElement="Flow_4_yes" color:border-color="#212121">
+        <di:waypoint x="745" y="253" />
+        <di:waypoint x="745" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_4_no" bpmnElement="Flow_4_no" color:border-color="#212121">
+        <di:waypoint x="745" y="303" />
+        <di:waypoint x="745" y="410" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_7_app" bpmnElement="Flow_7_app">
+        <di:waypoint x="1010" y="315" />
+        <di:waypoint x="1010" y="260" />
+        <di:waypoint x="1110" y="260" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_8" bpmnElement="Flow_8">
+        <di:waypoint x="1240" y="220" />
+        <di:waypoint x="1240" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_9" bpmnElement="Flow_9">
+        <di:waypoint x="1420" y="120" />
+        <di:waypoint x="1460" y="120" />
+        <di:waypoint x="1460" y="220" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_10" bpmnElement="Flow_10">
+        <di:waypoint x="1640" y="260" />
+        <di:waypoint x="1750" y="260" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_11" bpmnElement="Flow_11">
+        <di:waypoint x="1970" y="260" />
+        <di:waypoint x="2075" y="260" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_12_mgr_ok" bpmnElement="Flow_12_mgr_ok">
+        <di:waypoint x="2125" y="260" />
+        <di:waypoint x="2268" y="260" />
+        <di:waypoint x="2268" y="280" />
+        <di:waypoint x="2410" y="280" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_12_mgr_no" bpmnElement="Flow_12_mgr_no">
+        <di:waypoint x="2100" y="285" />
+        <di:waypoint x="2100" y="390" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_13" bpmnElement="Flow_13">
+        <di:waypoint x="2630" y="280" />
+        <di:waypoint x="2670" y="280" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_14_it_ok" bpmnElement="Flow_14_it_ok">
+        <di:waypoint x="2720" y="280" />
+        <di:waypoint x="2780" y="280" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_14_it_no" bpmnElement="Flow_14_it_no">
+        <di:waypoint x="2695" y="305" />
+        <di:waypoint x="2695" y="363" />
+        <di:waypoint x="2150" y="363" />
+        <di:waypoint x="2150" y="390" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_15_client" bpmnElement="Flow_15_client">
+        <di:waypoint x="2805" y="255" />
+        <di:waypoint x="2805" y="180" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_29" bpmnElement="Flow_29">
+        <di:waypoint x="3080" y="496" />
+        <di:waypoint x="3080" y="403" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_19" bpmnElement="Flow_19">
+        <di:waypoint x="3200" y="363" />
+        <di:waypoint x="3340" y="363" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_31" bpmnElement="Flow_31">
+        <di:waypoint x="3560" y="363" />
+        <di:waypoint x="3692" y="363" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_5" bpmnElement="Flow_5">
+        <di:waypoint x="890" y="120" />
+        <di:waypoint x="1012" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_6" bpmnElement="Flow_6">
+        <di:waypoint x="890" y="450" />
+        <di:waypoint x="930" y="450" />
+        <di:waypoint x="930" y="340" />
+        <di:waypoint x="985" y="340" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_7_srv" bpmnElement="Flow_7_srv">
+        <di:waypoint x="1010" y="365" />
+        <di:waypoint x="1010" y="480" />
+        <di:waypoint x="1040" y="480" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_23" bpmnElement="Flow_23">
+        <di:waypoint x="1900" y="530" />
+        <di:waypoint x="1900" y="590" />
+        <di:waypoint x="2075" y="590" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_24_mgr_ok" bpmnElement="Flow_24_mgr_ok">
+        <di:waypoint x="2100" y="615" />
+        <di:waypoint x="2100" y="660" />
+        <di:waypoint x="2300" y="660" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_24_mgr_no" bpmnElement="Flow_24_mgr_no">
+        <di:waypoint x="2105" y="570" />
+        <di:waypoint x="2105" y="470" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_25" bpmnElement="Flow_25">
+        <di:waypoint x="2410" y="620" />
+        <di:waypoint x="2410" y="455" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_26_it_no" bpmnElement="Flow_26_it_no">
+        <di:waypoint x="2385" y="430" />
+        <di:waypoint x="2290" y="430" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_30" bpmnElement="Flow_30">
+        <di:waypoint x="2200" y="470" />
+        <di:waypoint x="2200" y="553" />
+        <di:waypoint x="2250" y="553" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_20" bpmnElement="Flow_20">
+        <di:waypoint x="1300" y="480" />
+        <di:waypoint x="1440" y="480" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_21" bpmnElement="Flow_21">
+        <di:waypoint x="1520" y="440" />
+        <di:waypoint x="1520" y="380" />
+        <di:waypoint x="1580" y="380" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_22" bpmnElement="Flow_22">
+        <di:waypoint x="1710" y="403" />
+        <di:waypoint x="1710" y="427" />
+        <di:waypoint x="1810" y="427" />
+        <di:waypoint x="1810" y="450" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_26_it_ok" bpmnElement="Flow_26_it_ok">
+        <di:waypoint x="2435" y="430" />
+        <di:waypoint x="2520" y="430" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_27" bpmnElement="Flow_27">
+        <di:waypoint x="2700" y="490" />
+        <di:waypoint x="2700" y="610" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_28" bpmnElement="Flow_28">
+        <di:waypoint x="2870" y="650" />
+        <di:waypoint x="3050" y="650" />
+        <di:waypoint x="3050" y="576" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Edge_Flow_16" bpmnElement="Flow_16">
+        <di:waypoint x="2840" y="140" />
+        <di:waypoint x="3120" y="140" />
+        <di:waypoint x="3120" y="160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0w8q5tp_di" bpmnElement="Flow_0w8q5tp">
+        <di:waypoint x="2805" y="305" />
+        <di:waypoint x="2805" y="363" />
+        <di:waypoint x="2960" y="363" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0q3qgef_di" bpmnElement="Flow_0q3qgef">
+        <di:waypoint x="3120" y="240" />
+        <di:waypoint x="3120" y="323" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
