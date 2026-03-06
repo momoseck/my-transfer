@@ -1,0 +1,147 @@
+EPIC
+
+Epic : Portail applicatif – POC gestion des accès Market Making
+
+Description
+
+Mettre en place un POC de gestion des habilitations applicatives pour le desk Market Making via le portail applicatif.
+
+Le POC doit permettre :
+	•	la gestion des rôles applicatifs
+	•	l’affectation d’une ressource
+	•	le traitement d’une demande d’accès
+	•	l’intégration avec les systèmes IAM
+	•	la validation du fonctionnement via des tests d’accès
+
+Applications concernées :
+FX Market Making (FXMM)
+
+Objectif :
+	•	démontrer la faisabilité
+	•	valider le workflow d’attribution des droits
+	•	préparer l’industrialisation.
+
+⸻
+
+STORY 1
+
+Story : Création des rôles applicatifs pour le desk Market Making
+
+Description
+
+Configurer les rôles nécessaires pour les applications du périmètre Market Making afin de permettre leur attribution via le portail applicatif.
+
+Critères d’acceptation
+	•	Les rôles applicatifs sont définis
+	•	Les rôles sont visibles dans le portail
+	•	Les rôles sont associés aux applications FXMM
+
+Sous-tâches
+	•	Identifier les applications du desk Market Making
+	•	Définir les rôles métiers
+	•	Configurer les rôles dans le portail
+	•	Vérifier leur affichage dans le catalogue applicatif
+
+⸻
+
+STORY 2
+
+Story : Affectation d’une ressource et création d’une demande d’accès
+
+Description
+
+Permettre à une ressource d’hériter des rôles associés au desk Market Making via une demande d’accès.
+
+Critères d’acceptation
+	•	L’utilisateur peut être associé à un desk
+	•	L’utilisateur peut sélectionner des rôles
+	•	Une demande d’accès est générée
+
+Sous-tâches
+	•	Création ou sélection d’une ressource
+	•	Association de la ressource au desk Market Making
+	•	Sélection des rôles applicatifs
+	•	Génération d’une demande d’accès
+
+⸻
+
+STORY 3
+
+Story : Implémentation du workflow d’attribution des droits
+
+Description
+
+Mettre en place le processus de validation et d’attribution des droits suite à une demande d’accès.
+
+Le workflow doit inclure :
+	•	validation de la demande
+	•	suivi de l’état
+	•	intégration avec les outils de gestion des identités.
+
+Critères d’acceptation
+	•	La demande suit un workflow
+	•	L’état de la demande est traçable
+	•	Les systèmes externes sont appelés
+
+Sous-tâches
+	•	Implémenter les statuts de demande
+	•	Implémenter le suivi des demandes
+	•	Intégrer avec iTop pour la gestion des tickets
+	•	Intégrer avec ATOS IAM pour le provisioning
+
+⸻
+
+STORY 4
+
+Story : Validation de l’accès aux applications
+
+Description
+
+Vérifier qu’un utilisateur ayant obtenu une habilitation peut accéder aux applications autorisées.
+
+Critères d’acceptation
+	•	L’utilisateur voit les applications autorisées dans le portail
+	•	L’accès aux applications fonctionne
+	•	Les accès non autorisés sont bloqués
+
+Sous-tâches
+	•	Vérifier la visibilité des applications
+	•	Tester l’accès aux applications web
+	•	Tester l’accès aux clients lourds
+	•	Vérifier les restrictions d’accès
+
+⸻
+
+STORY 5
+
+Story : Correctifs applicatifs et amélioration de l’interface
+
+Description
+
+Apporter les correctifs nécessaires identifiés durant le POC et améliorer l’expérience utilisateur.
+
+Critères d’acceptation
+	•	Les anomalies sont corrigées
+	•	L’interface est améliorée
+	•	L’affichage des applications est optimisé
+
+Sous-tâches
+	•	Correction des anomalies identifiées
+	•	Amélioration du zoom et affichage UI
+	•	Optimisation du catalogue applicatif
+	•	Tests de validation UI
+
+⸻
+
+Structure finale Jira
+EPIC
+│
+├── STORY 1 : Création des rôles applicatifs
+│
+├── STORY 2 : Affectation ressource / demande d’accès
+│
+├── STORY 3 : Workflow attribution des droits
+│
+├── STORY 4 : Test d’accès aux applications
+│
+└── STORY 5 : Correctifs applicatifs
