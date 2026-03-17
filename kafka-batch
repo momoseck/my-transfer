@@ -1,0 +1,114 @@
+@startuml
+title Architecture d'intégration eMarket / Murex
+
+skinparam backgroundColor white
+skinparam componentStyle rectangle
+skinparam shadowing false
+skinparam defaultTextAlignment center
+skinparam packageStyle rectangle
+
+actor "eMarket" as emarket
+
+package "Backbone Kafka" {
+  queue "Topic Trading Operations" as topicOps
+  queue "Topic Integration Feedback" as topicIntegration
+  queue "Topic Business Decision Feedback" as topicDecision
+}
+
+package "Murex Platform" {
+  component "Murex Integration Bridge" as bridge
+  folder "Murex Input Directory" as inDir
+  folder "Murex Output Directory" as outDir
+  component "Murex" as murex
+}
+
+emarket --> topicOps : Publish operation
+topicOps --> bridge : Consume operation
+bridge --> inDir : Write integration file
+inDir --> murex : File pickup
+
+murex --> outDir : Integration feedback
+outDir --> bridge : Read technical feedback
+bridge --> topicIntegration : Publish integration status
+topicIntegration --> emarket : Integration notification
+
+murex --> outDir : Business decision feedback
+outDir --> bridge : Read business status
+bridge --> topicDecision : Publish decision status
+topicDecision --> emarket : Final decision notification
+
+@enduml
+
+-------------------------------------------------
+
+
+Lecture fonctionnelle
+Flux aller
+
+eMarket publie une opération dans Kafka Topic Opérations
+
+le bridge sur le serveur Murex consomme
+
+il génère le fichier attendu par Murex
+
+Murex intègre l’opération
+
+Retour 1 : intégration technique
+
+Ce retour confirme par exemple :
+
+reçu
+
+intégré techniquement
+
+en erreur d’intégration
+
+format invalide
+
+Exemples de statuts :
+
+RECEIVED
+
+INTEGRATED
+
+TECHNICAL_ERROR
+
+Retour 2 : décision métier
+
+Ce retour arrive après traitement métier dans Murex :
+
+validé
+
+rejeté
+
+en attente
+
+annulé
+
+Exemples :
+
+VALIDATED
+
+REJECTED
+
+PENDING
+
+CANCELLED
+
+Pourquoi séparer les deux
+
+C’est important parce que :
+
+une opération peut être techniquement intégrée dans Murex
+
+mais ensuite rejetée métierment
+
+Exemple :
+
+le fichier est correct → intégration OK
+
+mais la règle de gestion Murex rejette le trade → décision finale REJECTED
+
+Donc :
+
+retour intégration ≠ retour décision finale
