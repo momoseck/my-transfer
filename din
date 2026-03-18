@@ -1,0 +1,28 @@
+Bonjour,
+
+Dans le cadre du chantier Move to CaaS, nous souhaitons procéder à la création d’un namespace OpenShift dédié pour notre application.
+
+Ce namespace nous permettra de déployer les différents composants (backend, frontend, batch, base de données) conformément aux standards de déploiement cloud-native et aux bonnes pratiques en vigueur.
+
+### Informations nécessaires :
+- Nom du projet / application : [À compléter]
+- Nom du namespace souhaité : [ex: sdm-core-dev]
+- Environnement : [DEV / TEST / RECETTE / PROD]
+- Cluster cible : [À préciser]
+- Quota estimé (CPU / RAM / Storage) : [À préciser]
+- Accès utilisateurs / groupes (RBAC) :
+  - [Nom utilisateur / rôle : admin, edit, view]
+- Exposition réseau :
+  - Besoin d’accès externe (Route / Ingress) : [Oui / Non]
+- Intégration CI/CD :
+  - Outils utilisés : [GitLab / Jenkins / ArgoCD…]
+- Besoin en stockage persistant (PVC) :
+  - [Oui / Non + détails]
+
+Nous restons disponibles pour fournir toute information complémentaire nécessaire à la mise en place.
+
+Merci par avance pour votre support.
+
+Cordialement,  
+[Votre Nom]  
+[Votre équipe / projet]
