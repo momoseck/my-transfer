@@ -410,3 +410,52 @@ Work only on ONE user story.
 
 Current user story:
 [COLLER ICI]
+
+
+_____________________
+
+Act as Tech Lead.
+
+We received a review with the following comments:
+
+[COLLER REVIEW]
+
+Your job:
+1. Classify issues:
+   - critical
+   - improvements
+   - optional
+2. Decide what must be fixed now
+3. Create a correction plan
+4. Assign tasks to Backend / Architect / QA
+5. Ensure no regression risk
+
+
+Act as Backend Developer.
+
+Fix the following issues identified by the reviewer:
+
+[COLLER ISSUES]
+
+Constraints:
+- do not break existing behavior
+- keep code clean
+- explain impacted files
+
+Act as QA.
+
+Update test scenarios to cover:
+- previous bugs
+- new fixes
+- regression cases
+
+Act as Reviewer.
+
+Re-review the updated implementation.
+
+Check:
+- previous issues are fixed
+- no regression introduced
+- code quality is acceptable
+
+
