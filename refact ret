@@ -1,0 +1,245 @@
+scheduler / poller
+    -> file inbox scanner
+        -> file type resolver
+            -> processor strategy by type
+                -> parser
+                -> métier service
+                -> repository / dao
+                -> archive / error handling
+
+@Component
+@RequiredArgsConstructor
+public class ReturnFilePollingJob {
+
+    private final ReturnFileOrchestrator orchestrator;
+
+    @Scheduled(fixedDelayString = "${app.return-files.poll-delay-ms:30000}")
+    public void poll() {
+        orchestrator.processAvailableFiles();
+    }
+}
+
+
+public interface ReturnFileScanner {
+    List<Path> scan();
+}
+
+@Service
+@RequiredArgsConstructor
+public class LocalDirectoryReturnFileScanner implements ReturnFileScanner {
+    private final ReturnFileProperties properties;
+
+    @Override
+    public List<Path> scan() {
+        try (Stream<Path> stream = Files.list(Path.of(properties.inbox()))) {
+            return stream
+                    .filter(Files::isRegularFile)
+                    .sorted()
+                    .toList();
+        } catch (IOException e) {
+            throw new ReturnFileScanException("Erreur scan répertoire retour", e);
+        }
+    }
+}
+
+public enum ReturnFileType {
+    OK,
+    BOV,
+    CANCEL,
+    EXCEPTION,
+    UNKNOWN
+}
+
+public interface ReturnFileTypeResolver {
+    ReturnFileType resolve(String fileName);
+}
+
+@Service
+public class PrefixBasedReturnFileTypeResolver implements ReturnFileTypeResolver {
+
+    @Override
+    public ReturnFileType resolve(String fileName) {
+        if (fileName.startsWith("OK")) return ReturnFileType.OK;
+        if (fileName.startsWith("BoV")) return ReturnFileType.BOV;
+        if (fileName.startsWith("Cancel")) return ReturnFileType.CANCEL;
+        if (fileName.startsWith("Exception")) return ReturnFileType.EXCEPTION;
+        return ReturnFileType.UNKNOWN;
+    }
+}
+
+@Service
+@RequiredArgsConstructor
+public class ReturnFileOrchestrator {
+
+    private final ReturnFileScanner scanner;
+    private final ReturnFileTypeResolver typeResolver;
+    private final ReturnFileProcessorRegistry processorRegistry;
+    private final ProcessedFileManager processedFileManager;
+
+    public void processAvailableFiles() {
+        List<Path> files = scanner.scan();
+
+        for (Path file : files) {
+            String fileName = file.getFileName().toString();
+            ReturnFileType type = typeResolver.resolve(fileName);
+
+            try {
+                ReturnFileProcessor processor = processorRegistry.get(type);
+                processor.process(file);
+                processedFileManager.moveToProcessed(file);
+            } catch (BusinessRejectException e) {
+                processedFileManager.moveToBusinessError(file, e.getMessage());
+            } catch (Exception e) {
+                processedFileManager.moveToTechnicalError(file, e.getMessage());
+            }
+        }
+    }
+}
+
+
+public interface ReturnFileProcessor {
+    ReturnFileType supports();
+    void process(Path file);
+}
+
+public interface OkReturnFileParser {
+    OkReturnData parse(Path file);
+}
+
+public record BovReturnData(String acon) {}
+
+@Service
+public class BovReturnFileParser {
+
+    public BovReturnData parse(Path file) {
+        String line = readFirstLine(file);
+        String[] parts = line.split(";");
+        if (parts.length == 0 || parts[0].isBlank()) {
+            throw new InvalidReturnFileFormatException("Format BOV invalide");
+        }
+        return new BovReturnData(parts[0].trim());
+    }
+
+    private String readFirstLine(Path file) {
+        try (BufferedReader reader = Files.newBufferedReader(file, StandardCharsets.UTF_8)) {
+            String line = reader.readLine();
+            if (line == null || line.isBlank()) {
+                throw new InvalidReturnFileFormatException("Fichier vide");
+            }
+            return line;
+        } catch (IOException e) {
+            throw new ReturnFileReadException("Erreur lecture fichier BOV", e);
+        }
+    }
+}
+
+@Service
+@RequiredArgsConstructor
+public class CancelReturnService {
+
+    private final TransactionRepository transactionRepository;
+    private final LimiteClientRepository limiteClientRepository;
+
+    @Transactional
+    public void process(CancelReturnData data) {
+        TransactionEntity tran = transactionRepository.findByAcon(data.acon())
+                .orElseThrow(() -> new BusinessRejectException("Transaction introuvable"));
+
+        tran.markCancelled();
+
+        LimiteClient limite = limiteClientRepository.findByClientAndCurrency(
+                tran.getClientCode(),
+                tran.getCurrencyCode()
+        ).orElseThrow(() -> new BusinessRejectException("Limite client introuvable"));
+
+        limite.decreaseExposure(tran.getAmount());
+
+        transactionRepository.save(tran);
+        limiteClientRepository.save(limite);
+    }
+}
+
+
+@Service
+@RequiredArgsConstructor
+public class OkReturnFileProcessor implements ReturnFileProcessor {
+
+    private final OkReturnFileParser parser;
+    private final OkReturnService service;
+
+    @Override
+    public ReturnFileType supports() {
+        return ReturnFileType.OK;
+    }
+
+    @Override
+    public void process(Path file) {
+        OkReturnData data = parser.parse(file);
+        service.process(data);
+    }
+}
+
+
+@Service
+@RequiredArgsConstructor
+public class BovReturnFileProcessor implements ReturnFileProcessor {
+
+    private final BovReturnFileParser parser;
+    private final BovReturnService service;
+
+    @Override
+    public ReturnFileType supports() {
+        return ReturnFileType.BOV;
+    }
+
+    @Override
+    public void process(Path file) {
+        BovReturnData data = parser.parse(file);
+        service.process(data);
+    }
+}
+
+@Component
+public class ReturnFileProcessorRegistry {
+
+    private final Map<ReturnFileType, ReturnFileProcessor> processors;
+
+    public ReturnFileProcessorRegistry(List<ReturnFileProcessor> processorList) {
+        this.processors = processorList.stream()
+                .collect(Collectors.toMap(ReturnFileProcessor::supports, Function.identity()));
+    }
+
+    public ReturnFileProcessor get(ReturnFileType type) {
+        ReturnFileProcessor processor = processors.get(type);
+        if (processor == null) {
+            throw new UnsupportedReturnFileTypeException("Type non supporté : " + type);
+        }
+        return processor;
+    }
+}
+
+app:
+  return-files:
+    inbox: /data/returns/inbox
+    processing: /data/returns/processing
+    processed: /data/returns/processed
+    error: /data/returns/error
+    poll-delay-ms: 30000
+
+
+@ConfigurationProperties(prefix = "app.return-files")
+public record ReturnFileProperties(
+        String inbox,
+        String processing,
+        String processed,
+        String error,
+        long pollDelayMs
+) {}
+
+
+
+
+
+
+
+
