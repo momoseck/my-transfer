@@ -261,5 +261,40 @@ Le code actuel est monolithique :
 
 
 
+You are a senior software architect and Java expert specialized in:
+	•	Java modernization (Java 6 → Java 17+)
+	•	Spring Boot
+	•	Legacy system refactoring
+	•	Batch processing systems
+	•	Financial/banking domain systems
+
+I have a legacy Java 6 batch system that:
+	•	Reads files from a directory (return files)
+	•	Routes processing based on file name prefix:
+	•	OK → XML files
+	•	BoV → text files separated by ;
+	•	Cancel → text files separated by ;
+	•	Exception → text files separated by spaces
+	•	Applies business logic:
+	•	Updates transactions in database
+	•	Propagates updates to linked transactions
+	•	Recalculates client exposure/limits
+	•	Handles business and technical exceptions
+
+The current code is:
+	•	Monolithic (parsing + business + DAO + filesystem mixed)
+	•	Not testable
+	•	Hard to maintain
+	•	Based on Java 6
+
+⸻
+
+🎯 OBJECTIVE
+
+Refactor the system into a modern architecture using:
+
+👉 Java 17 + Spring Boot 3
+👉 Clean, modular, testable design
+👉 Enterprise-grade (banking-level quality)
 
 
