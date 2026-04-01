@@ -238,6 +238,26 @@ public record ReturnFileProperties(
 
 
 
+Tu es un expert architecte Java / Spring Boot / systèmes legacy / batch processing.
+
+Je possède un code legacy Java 6 qui :
+	•	lit un répertoire de fichiers retour
+	•	route les fichiers selon leur nom :
+	•	OK → XML
+	•	BoV → fichier texte séparé par ;
+	•	Cancel → fichier texte séparé par ;
+	•	Exception → fichier texte séparé par espace
+	•	applique des traitements métier :
+	•	mise à jour de transactions
+	•	propagation sur transactions liées
+	•	recalcul d’encours client
+	•	gestion d’erreurs métier
+
+Le code actuel est monolithique :
+	•	parsing + logique métier + DAO + filesystem mélangés
+	•	non testable
+	•	fragile
+	•	dépendant Java 6
 
 
 
