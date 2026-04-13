@@ -70,3 +70,110 @@ Merci de valider :
 - Flux réseau
 - Sécurité
 - Topics Kafka
+
+
+ID Flux
+Source
+Destination
+Protocole
+Port
+Sens
+Objet / Usage
+Commentaire
+F1
+eMarket
+Kafka – Topic Trading Operations
+Kafka / TCP
+9093
+Sortant vers Kafka
+Publication des opérations de trading
+eMarket produit les opérations à traiter
+F2
+Batch Integration Bridge
+Kafka – Topic Trading Operations
+Kafka / TCP
+9093
+Entrant depuis Kafka
+Consommation des opérations
+Le Bridge consomme les opérations publiées par eMarket
+F3
+Batch Integration Bridge
+Murex Input
+Fichier / NFS / montage local
+N/A
+Sortant
+Dépôt du fichier d’intégration
+Génération et écriture du fichier attendu par Murex
+F4
+Murex
+Murex Output
+Fichier local
+N/A
+Sortant
+Production des fichiers de retour
+Réponse technique ou métier générée par Murex
+F5
+Batch Integration Bridge
+Murex Output
+Fichier / NFS / montage local
+N/A
+Entrant
+Lecture des fichiers de retour
+Le Bridge lit les retours produits par Murex
+F6
+Batch Integration Bridge
+Kafka – Topic Integration Response
+Kafka / TCP
+9093
+Sortant vers Kafka
+Publication du statut technique
+ACK, erreur technique, retour d’intégration
+F7
+eMarket
+Kafka – Topic Integration Response
+Kafka / TCP
+9093
+Entrant depuis Kafka
+Consommation du statut technique
+Notification de bonne intégration ou erreur technique
+F8
+Batch Integration Bridge
+Kafka – Topic Business Decision
+Kafka / TCP
+9093
+Sortant vers Kafka
+Publication de la décision métier finale
+Validation, rejet, annulation, etc.
+F9
+eMarket
+Kafka – Topic Business Decision
+Kafka / TCP
+9093
+Entrant depuis Kafka
+Consommation de la décision métier
+Mise à jour finale de l’état métier côté eMarket
+F10
+Batch Integration Bridge
+Kafka Brokers
+TLS / SSL ou SASL_SSL sur TCP
+9093
+Bidirectionnel
+Connexion sécurisée au cluster Kafka
+Flux réseau à ouvrir entre le serveur du Bridge et Kafka
+F11
+Batch Integration Bridge
+DNS
+UDP/TCP
+53
+Sortant
+Résolution des noms des brokers Kafka
+Nécessaire si les brokers sont appelés par hostname
+F12
+Batch Integration Bridge
+NTP
+UDP
+123
+Sortant
+Synchronisation horaire
+Recommandé pour logs, certificats et traçabilité
+
