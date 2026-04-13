@@ -1,0 +1,72 @@
+Demande de validation d’architecture
+
+Intégration eMarket / Murex via Kafka et Bridge Spring Boot
+
+1. Contexte
+Dans le cadre de l’intégration entre le système eMarket et Murex, nous mettons en place une architecture hybride permettant :
+- de conserver le mode de fonctionnement actuel de Murex (basé sur fichiers)
+- tout en intégrant une communication moderne basée sur Kafka côté eMarket
+
+Cette architecture repose sur un composant intermédiaire appelé Batch Integration Bridge, déployé sur un serveur dédié.
+
+2. Description de l’architecture
+L’architecture se compose de trois blocs :
+
+1. Murex (Legacy)
+- Consomme des fichiers via un répertoire d’entrée
+- Produit des fichiers de réponse dans un répertoire de sortie
+- Ne supporte pas Kafka nativement
+
+2. Batch Integration Bridge (Spring Boot)
+- Déployé sur un serveur X
+- Joue le rôle de pont entre fichiers et Kafka
+- Assure la transformation et les échanges
+
+3. Kafka (Backbone d’intégration)
+Topics utilisés :
+- Topic Trading Operations
+- Topic Integration Response
+- Topic Business Decision
+
+3. Flux détaillés
+Flux eMarket → Kafka → Bridge → Murex :
+1. eMarket publie une opération dans Kafka
+2. Le Bridge consomme
+3. Génération fichier pour Murex
+
+Flux Murex → Kafka :
+- Statut technique → Topic Integration Response
+- Décision métier → Topic Business Decision
+
+4. Rôle du Bridge
+Le Batch Integration Bridge :
+- découple Murex de Kafka
+- permet une intégration progressive
+- gère transformation, erreurs et traçabilité
+
+5. Flux réseau
+- Serveur Bridge → Kafka : TCP 9093
+- Serveur Bridge → Répertoire Murex : accès fichiers
+
+6. Sécurité
+- Communication sécurisée (SSL / SASL_SSL)
+- Authentification par certificats
+- ACL Kafka sur topics
+
+7. Points forts
+- Découplage total
+- Pas d’impact sur Murex
+- Scalabilité côté Kafka
+- Évolution possible vers full Kafka
+
+8. Risques
+- Dépendance au Bridge
+- Latence fichiers
+- Supervision nécessaire
+
+9. Validation demandée
+Merci de valider :
+- Architecture proposée
+- Flux réseau
+- Sécurité
+- Topics Kafka
