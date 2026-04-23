@@ -1,0 +1,217 @@
+---
+
+## O. Project Structure / Responsibility Separation Review
+
+### Objective
+
+The reviewer must verify that the project structure is designed to:
+- separate responsibilities clearly
+- improve readability
+- improve maintainability
+- reduce coupling
+- help onboarding
+- make the codebase easier to navigate and understand
+- align technical structure with business domains and application flows
+
+A good project structure must help developers quickly answer:
+- where to find business logic
+- where to find technical logic
+- where to find integration logic
+- where to find persistence logic
+- where to find batch/job logic
+- where to find Kafka consumers/producers
+- where to find file processing pipelines
+- where to find configuration and shared components
+
+---
+
+### What to Review
+
+The reviewer must assess whether the project structure is:
+
+- coherent
+- predictable
+- easy to navigate
+- aligned with architectural intent
+- scalable as the application grows
+- supportive of domain separation
+- readable for new developers and reviewers
+
+---
+
+### Structural Expectations
+
+The reviewer should prefer a structure that clearly separates concerns such as:
+
+- API layer
+- application/service layer
+- domain/business layer
+- infrastructure/integration layer
+- persistence layer
+- messaging layer
+- batch/job layer
+- file processing layer
+- configuration layer
+- shared technical utilities
+
+The reviewer must ensure that technical concerns do not pollute business logic, and that business logic is not scattered across unrelated packages.
+
+---
+
+### Checkpoints
+
+#### 1. Clear package/module organization
+- [ ] Is the project organized in a clear and predictable way?
+- [ ] Can a developer quickly locate a feature or responsibility?
+- [ ] Are packages/modules named clearly and consistently?
+- [ ] Is the structure aligned with the business domain and application architecture?
+
+#### 2. Separation of responsibilities
+- [ ] Are controllers limited to API orchestration?
+- [ ] Are services focused on business/application orchestration?
+- [ ] Is domain logic centralized instead of scattered?
+- [ ] Are repositories limited to persistence access?
+- [ ] Are Kafka producers/consumers isolated from business logic?
+- [ ] Are file readers/parsers/processors clearly separated?
+- [ ] Are batch/job concerns isolated from core domain logic?
+- [ ] Are email/reporting components separated from business services?
+- [ ] Are configuration classes isolated and readable?
+
+#### 3. Readability and discoverability
+- [ ] Is the codebase easy to read and navigate?
+- [ ] Is the naming explicit enough to understand intent quickly?
+- [ ] Can a new developer understand the project layout without excessive explanation?
+- [ ] Are related components grouped logically?
+
+#### 4. Scalability of structure
+- [ ] Will the current structure remain understandable as the project grows?
+- [ ] Does the structure support adding new features without creating chaos?
+- [ ] Does the structure avoid large generic packages such as `utils`, `common`, `services`, `misc` without boundaries?
+
+#### 5. Domain and feature alignment
+- [ ] Is the structure aligned with business capabilities or bounded contexts where relevant?
+- [ ] Are technical layers supporting the domain instead of dominating the structure?
+- [ ] Are cross-cutting concerns separated from business features?
+
+---
+
+### Red Flags
+
+The reviewer must detect and call out the following structural issues:
+
+- fat generic packages
+- unclear project layout
+- business logic spread across controllers, repositories, listeners, schedulers, and utils
+- excessive use of `common`, `shared`, `helper`, `util`, `manager`, or `service` packages without clear boundaries
+- Kafka logic mixed directly with domain logic
+- file parsing, validation, and persistence mixed in one class
+- job scheduling logic mixed with business processing logic
+- technical classes grouped by framework only, with no business readability
+- duplicated logic across multiple modules
+- unclear naming that hides intent
+- packages organized in a way that makes onboarding difficult
+- large monolithic services that own too many responsibilities
+- structure that forces developers to jump across too many unrelated files to understand a business flow
+
+---
+
+### Reviewer Expectations
+
+The reviewer should encourage a structure that improves both architecture and day-to-day development.
+
+A good structure should make it easy to identify:
+
+- entry points
+- orchestration logic
+- domain logic
+- integration points
+- persistence logic
+- async processing logic
+- batch processing logic
+- file processing stages
+- reporting/notification responsibilities
+- reusable technical building blocks
+
+---
+
+### Recommended Structural Principles
+
+The reviewer should prefer these principles when relevant:
+
+#### Principle 1 — Explicit boundaries
+Each major responsibility should have a clear place in the codebase.
+
+#### Principle 2 — Business readability
+A developer should understand the main business flows by reading the structure.
+
+#### Principle 3 — Technical isolation
+Kafka, persistence, email, file I/O, and scheduling concerns should not leak everywhere.
+
+#### Principle 4 — Controlled shared code
+Shared components should be limited and intentional, not dumping grounds.
+
+#### Principle 5 — Feature evolvability
+Adding a new feature should not require touching unrelated modules excessively.
+
+---
+
+### Suggested Structural Patterns
+
+Depending on project size and maturity, the reviewer may recommend:
+
+- layered structure with strict responsibility boundaries
+- package-by-feature with controlled layering inside each feature
+- modular monolith organization
+- domain-oriented package structure
+- dedicated modules for integrations, batch, messaging, and file processing when complexity justifies it
+
+The reviewer should not enforce one style blindly, but must verify that the chosen structure remains understandable and maintainable.
+
+---
+
+### What Good Looks Like
+
+A good project structure should make the following obvious:
+
+- where incoming API requests enter
+- where business decisions are made
+- where database interactions happen
+- where Kafka messages are produced/consumed
+- where scheduled jobs start
+- where files are read and parsed
+- where reports are generated
+- where emails are sent
+- where configs and technical adapters are defined
+
+---
+
+### Example Review Comments
+
+- [MAJOR] The project structure makes responsibility boundaries unclear.
+  - Observation: Business logic is distributed across controllers, Kafka listeners, and repository implementations.
+  - Why it matters: This makes the application harder to understand, test, and evolve safely.
+  - Recommendation: Centralize business rules in dedicated application/domain services and keep adapters focused on orchestration only.
+
+- [MAJOR] The package structure is too generic to support maintainability.
+  - Observation: Most classes are grouped under broad packages such as `service`, `utils`, and `common`.
+  - Why it matters: This reduces discoverability and makes onboarding and code reviews harder.
+  - Recommendation: Reorganize packages around clear responsibilities or features, with explicit separation between API, domain, persistence, messaging, and batch/file processing concerns.
+
+- [MINOR] File ingestion responsibilities are not clearly separated.
+  - Observation: Reading, parsing, validation, and persistence are implemented in the same class.
+  - Why it matters: This reduces readability and increases change risk.
+  - Recommendation: Split the pipeline into explicit stages or components with focused responsibilities.
+
+---
+
+### Additional Reviewer Rule
+
+When the project structure is confusing, the reviewer must explicitly mention it even if the code itself is functional.
+
+A solution may work technically but still be considered weak if:
+- the structure is hard to understand
+- responsibilities are poorly separated
+- the codebase is difficult to navigate
+- future evolution will likely create disorder
+
+Structural clarity is part of production quality.
