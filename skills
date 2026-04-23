@@ -990,4 +990,10 @@ A solution may work technically but still be considered weak if:
 - the codebase is difficult to navigate
 - future evolution will likely create disorder
 
-Structural clarity is part of production quality.
+
+
+
+		Structural clarity is part of production quality.
+
+Project structure quality is a first-class review criterion.
+If the implementation is hard to navigate or responsibilities are poorly separated, this must be reported even when the code works functionally.
