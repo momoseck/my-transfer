@@ -1,0 +1,1970 @@
+Guide complet des commandes Linux utiles et déploiement VPS d’une application Java Spring Boot
+
+## Objectif du guide
+
+Ce guide explique :
+
+- les commandes Linux utiles au quotidien ;
+- le rôle exact de chaque commande ;
+- comment préparer un VPS Linux ;
+- comment déployer une application Java Spring Boot ;
+- comment gérer la configuration externe ;
+- comment créer un service Linux avec `systemd` ;
+- comment exposer l’application avec Nginx ;
+- comment activer HTTPS ;
+- comment diagnostiquer les erreurs courantes.
+
+---
+
+# 1. Connexion au VPS
+
+## Commande SSH
+
+```bash
+ssh root@IP_DU_SERVEUR
+```
+
+### Rôle
+
+Permet de se connecter à distance à un serveur Linux.
+
+### Exemple
+
+```bash
+ssh root@192.168.1.20
+```
+
+---
+
+## Connexion avec un autre utilisateur
+
+```bash
+ssh springapp@IP_DU_SERVEUR
+```
+
+### Rôle
+
+Se connecter avec un utilisateur non-root, plus sécurisé pour l’exploitation quotidienne.
+
+---
+
+# 2. Commandes Linux de navigation
+
+## Afficher le dossier courant
+
+```bash
+pwd
+```
+
+### Rôle
+
+Affiche le chemin complet du répertoire dans lequel tu te trouves.
+
+### Exemple
+
+```bash
+/home/springapp
+```
+
+---
+
+## Lister les fichiers
+
+```bash
+ls
+```
+
+### Rôle
+
+Affiche les fichiers et dossiers du répertoire courant.
+
+---
+
+## Lister avec détails
+
+```bash
+ls -la
+```
+
+### Rôle
+
+Affiche les fichiers avec :
+
+- permissions ;
+- propriétaire ;
+- groupe ;
+- taille ;
+- date de modification ;
+- fichiers cachés.
+
+### Exemple
+
+```bash
+ls -la /opt/myapp
+```
+
+---
+
+## Changer de dossier
+
+```bash
+cd /chemin/du/dossier
+```
+
+### Rôle
+
+Permet de naviguer vers un autre répertoire.
+
+### Exemple
+
+```bash
+cd /opt/myapp
+```
+
+---
+
+## Revenir au dossier parent
+
+```bash
+cd ..
+```
+
+### Rôle
+
+Remonte d’un niveau dans l’arborescence.
+
+---
+
+## Revenir au dossier personnel
+
+```bash
+cd ~
+```
+
+### Rôle
+
+Retourne dans le dossier personnel de l’utilisateur connecté.
+
+---
+
+# 3. Gestion des fichiers et dossiers
+
+## Créer un dossier
+
+```bash
+mkdir mon-dossier
+```
+
+### Rôle
+
+Crée un nouveau répertoire.
+
+---
+
+## Créer plusieurs niveaux de dossiers
+
+```bash
+mkdir -p /opt/myapp/config
+```
+
+### Rôle
+
+Crée toute l’arborescence si elle n’existe pas déjà.
+
+### Exemple
+
+```bash
+mkdir -p /opt/myapp/logs
+mkdir -p /opt/myapp/config
+```
+
+---
+
+## Copier un fichier
+
+```bash
+cp source destination
+```
+
+### Rôle
+
+Copie un fichier vers un autre emplacement.
+
+### Exemple
+
+```bash
+cp myapp.jar /opt/myapp/myapp.jar
+```
+
+---
+
+## Copier un dossier complet
+
+```bash
+cp -r dossier-source dossier-destination
+```
+
+### Rôle
+
+Copie un dossier avec tout son contenu.
+
+---
+
+## Déplacer ou renommer un fichier
+
+```bash
+mv ancien-nom nouveau-nom
+```
+
+### Rôle
+
+Permet de déplacer ou renommer un fichier.
+
+### Exemple
+
+```bash
+mv app.jar myapp.jar
+```
+
+---
+
+## Supprimer un fichier
+
+```bash
+rm fichier
+```
+
+### Rôle
+
+Supprime un fichier.
+
+---
+
+## Supprimer un dossier complet
+
+```bash
+rm -rf dossier
+```
+
+### Rôle
+
+Supprime un dossier et tout son contenu.
+
+### Attention
+
+Cette commande est dangereuse si elle est mal utilisée.
+
+### Exemple
+
+```bash
+rm -rf /opt/myapp/old
+```
+
+---
+
+# 4. Lire et modifier des fichiers
+
+## Afficher tout le contenu d’un fichier
+
+```bash
+cat fichier
+```
+
+### Rôle
+
+Affiche le contenu complet d’un fichier dans le terminal.
+
+### Exemple
+
+```bash
+cat /opt/myapp/config/application-prod.yml
+```
+
+---
+
+## Lire un fichier page par page
+
+```bash
+less fichier
+```
+
+### Rôle
+
+Permet de lire un fichier long avec navigation.
+
+### Touches utiles
+
+```text
+q       quitter
+/espace rechercher un mot
+flèche  naviguer
+```
+
+---
+
+## Afficher la fin d’un fichier
+
+```bash
+tail fichier
+```
+
+### Rôle
+
+Affiche les dernières lignes d’un fichier.
+
+---
+
+## Suivre les logs en temps réel
+
+```bash
+tail -f fichier.log
+```
+
+### Rôle
+
+Affiche les nouvelles lignes ajoutées au fichier en direct.
+
+### Exemple
+
+```bash
+tail -f /opt/myapp/logs/myapp.log
+```
+
+---
+
+## Afficher les 200 dernières lignes
+
+```bash
+tail -n 200 fichier.log
+```
+
+### Rôle
+
+Utile pour consulter rapidement les dernières erreurs.
+
+---
+
+## Rechercher un mot dans un fichier
+
+```bash
+grep "ERROR" fichier.log
+```
+
+### Rôle
+
+Filtre les lignes contenant un texte précis.
+
+### Exemple
+
+```bash
+grep "Exception" /opt/myapp/logs/myapp.log
+```
+
+---
+
+## Éditer un fichier avec nano
+
+```bash
+nano fichier
+```
+
+### Rôle
+
+Ouvre un éditeur simple dans le terminal.
+
+### Touches utiles
+
+```text
+CTRL + O   sauvegarder
+Entrée     confirmer
+CTRL + X   quitter
+```
+
+---
+
+## Éditer un fichier avec vi
+
+```bash
+vi fichier
+```
+
+### Rôle
+
+Ouvre l’éditeur `vi`.
+
+### Commandes utiles
+
+```text
+i       mode insertion
+ESC     sortir du mode insertion
+:wq     sauvegarder et quitter
+:q!     quitter sans sauvegarder
+```
+
+---
+
+# 5. Gestion des droits
+
+## Voir les droits
+
+```bash
+ls -la
+```
+
+### Rôle
+
+Permet de voir les permissions d’un fichier ou dossier.
+
+### Exemple
+
+```text
+-rw-r--r-- 1 springapp springapp 2048 app.jar
+```
+
+---
+
+## Donner le droit d’exécution
+
+```bash
+chmod +x script.sh
+```
+
+### Rôle
+
+Rend un script exécutable.
+
+---
+
+## Modifier les droits
+
+```bash
+chmod 755 fichier
+```
+
+### Rôle
+
+Définit les droits du fichier.
+
+### Signification
+
+```text
+7 = lecture + écriture + exécution
+5 = lecture + exécution
+5 = lecture + exécution
+```
+
+---
+
+## Changer le propriétaire
+
+```bash
+chown user:group fichier
+```
+
+### Rôle
+
+Change le propriétaire et le groupe d’un fichier.
+
+### Exemple
+
+```bash
+chown springapp:springapp /opt/myapp/myapp.jar
+```
+
+---
+
+## Changer le propriétaire d’un dossier complet
+
+```bash
+chown -R springapp:springapp /opt/myapp
+```
+
+### Rôle
+
+Applique le propriétaire à tout le dossier et son contenu.
+
+---
+
+# 6. Gestion des processus
+
+## Voir les processus
+
+```bash
+ps aux
+```
+
+### Rôle
+
+Liste tous les processus actifs sur le serveur.
+
+---
+
+## Chercher un processus Java
+
+```bash
+ps aux | grep java
+```
+
+### Rôle
+
+Permet de savoir si une application Java tourne.
+
+---
+
+## Afficher l’activité système
+
+```bash
+top
+```
+
+### Rôle
+
+Affiche l’utilisation CPU, mémoire et processus en temps réel.
+
+---
+
+## Variante plus lisible
+
+```bash
+htop
+```
+
+### Rôle
+
+Même rôle que `top`, mais plus ergonomique.
+
+### Installation
+
+```bash
+apt install htop -y
+```
+
+---
+
+## Arrêter un processus
+
+```bash
+kill PID
+```
+
+### Rôle
+
+Demande l’arrêt propre d’un processus.
+
+---
+
+## Forcer l’arrêt
+
+```bash
+kill -9 PID
+```
+
+### Rôle
+
+Force l’arrêt immédiat d’un processus.
+
+### Attention
+
+À utiliser seulement si l’arrêt normal ne fonctionne pas.
+
+---
+
+# 7. Réseau et ports
+
+## Voir les ports ouverts
+
+```bash
+ss -tulnp
+```
+
+### Rôle
+
+Affiche les ports écoutés par les applications.
+
+### Exemple
+
+```bash
+ss -tulnp | grep 8080
+```
+
+---
+
+## Ancienne alternative
+
+```bash
+netstat -tulnp
+```
+
+### Rôle
+
+Même objectif que `ss`, mais parfois non installé par défaut.
+
+---
+
+## Voir l’application qui utilise un port
+
+```bash
+lsof -i :8080
+```
+
+### Rôle
+
+Permet d’identifier quel processus utilise le port `8080`.
+
+---
+
+## Tester une URL
+
+```bash
+curl http://localhost:8080
+```
+
+### Rôle
+
+Appelle une URL depuis le terminal.
+
+### Exemple avec Spring Actuator
+
+```bash
+curl http://localhost:8080/actuator/health
+```
+
+---
+
+## Tester la connectivité réseau
+
+```bash
+ping google.com
+```
+
+### Rôle
+
+Teste si le serveur peut joindre une adresse réseau.
+
+---
+
+## Télécharger un fichier
+
+```bash
+wget URL
+```
+
+### Rôle
+
+Télécharge un fichier depuis Internet.
+
+### Exemple
+
+```bash
+wget https://example.com/myapp.jar
+```
+
+---
+
+# 8. Mise à jour du serveur
+
+## Mettre à jour la liste des paquets
+
+```bash
+apt update
+```
+
+### Rôle
+
+Met à jour la liste des paquets disponibles.
+
+---
+
+## Mettre à jour les paquets installés
+
+```bash
+apt upgrade -y
+```
+
+### Rôle
+
+Installe les nouvelles versions des paquets déjà présents.
+
+---
+
+## Commande complète
+
+```bash
+apt update && apt upgrade -y
+```
+
+### Rôle
+
+Met à jour le serveur complètement.
+
+---
+
+# 9. Installation de Java
+
+## Installer Java 17
+
+```bash
+apt install openjdk-17-jdk -y
+```
+
+### Rôle
+
+Installe le JDK Java 17, nécessaire pour exécuter une application Spring Boot moderne.
+
+---
+
+## Vérifier la version Java
+
+```bash
+java -version
+```
+
+### Rôle
+
+Confirme la version Java utilisée par le système.
+
+---
+
+## Trouver le chemin Java
+
+```bash
+which java
+```
+
+### Rôle
+
+Affiche le chemin de la commande Java.
+
+### Exemple
+
+```bash
+/usr/bin/java
+```
+
+---
+
+# 10. Création d’un utilisateur applicatif
+
+## Créer un utilisateur
+
+```bash
+adduser springapp
+```
+
+### Rôle
+
+Crée un utilisateur Linux dédié à l’application.
+
+### Pourquoi ?
+
+Il est déconseillé d’exécuter une application en `root`.
+
+---
+
+## Ajouter l’utilisateur au groupe sudo
+
+```bash
+usermod -aG sudo springapp
+```
+
+### Rôle
+
+Donne à l’utilisateur le droit d’exécuter des commandes administrateur avec `sudo`.
+
+---
+
+# 11. Préparer l’arborescence applicative
+
+## Créer les dossiers
+
+```bash
+mkdir -p /opt/myapp
+mkdir -p /opt/myapp/config
+mkdir -p /opt/myapp/logs
+```
+
+### Rôle
+
+Prépare une structure propre pour l’application.
+
+---
+
+## Donner les droits à l’utilisateur applicatif
+
+```bash
+chown -R springapp:springapp /opt/myapp
+```
+
+### Rôle
+
+Permet à l’utilisateur `springapp` de gérer les fichiers de l’application.
+
+---
+
+## Structure recommandée
+
+```text
+/opt/myapp/
+├── myapp.jar
+├── config/
+│   └── application-prod.yml
+└── logs/
+    └── myapp.log
+```
+
+### Rôle
+
+Sépare clairement :
+
+- le binaire applicatif ;
+- la configuration ;
+- les logs.
+
+---
+
+# 12. Transfert du JAR vers le VPS
+
+## Depuis ton PC vers le VPS
+
+```bash
+scp target/myapp.jar springapp@IP_DU_SERVEUR:/opt/myapp/myapp.jar
+```
+
+### Rôle
+
+Copie le JAR Spring Boot depuis ton poste local vers le serveur.
+
+---
+
+## Copier avec un nom spécifique
+
+```bash
+scp target/demo-1.0.0.jar springapp@IP_DU_SERVEUR:/opt/myapp/myapp.jar
+```
+
+### Rôle
+
+Permet de standardiser le nom du JAR sur le serveur.
+
+---
+
+# 13. Lancer une application Spring Boot manuellement
+
+## Lancement simple
+
+```bash
+java -jar /opt/myapp/myapp.jar
+```
+
+### Rôle
+
+Démarre l’application Spring Boot.
+
+---
+
+## Lancer avec un profil Spring
+
+```bash
+java -jar /opt/myapp/myapp.jar --spring.profiles.active=prod
+```
+
+### Rôle
+
+Active le profil `prod`.
+
+---
+
+## Lancer avec une configuration externe
+
+```bash
+java -jar /opt/myapp/myapp.jar \
+  --spring.config.location=file:/opt/myapp/config/application-prod.yml
+```
+
+### Rôle
+
+Force Spring Boot à utiliser un fichier de configuration externe.
+
+---
+
+## Lancer avec profil et config externe
+
+```bash
+java -jar /opt/myapp/myapp.jar \
+  --spring.profiles.active=prod \
+  --spring.config.location=file:/opt/myapp/config/application-prod.yml
+```
+
+### Rôle
+
+Combine le profil Spring et le fichier de configuration externe.
+
+---
+
+# 14. Exemple de configuration Spring Boot externe
+
+## Créer le fichier
+
+```bash
+nano /opt/myapp/config/application-prod.yml
+```
+
+### Rôle
+
+Crée ou modifie le fichier de configuration de production.
+
+---
+
+## Exemple de contenu
+
+```yaml
+server:
+  port: 8080
+
+spring:
+  application:
+    name: myapp
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/mydb
+    username: myuser
+    password: mypassword
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+
+logging:
+  file:
+    name: /opt/myapp/logs/myapp.log
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+```
+
+### Rôle des blocs
+
+#### `server.port`
+
+Définit le port HTTP interne de l’application.
+
+#### `spring.datasource`
+
+Configure la connexion à la base de données.
+
+#### `spring.jpa`
+
+Configure le comportement JPA/Hibernate.
+
+#### `logging.file.name`
+
+Définit le fichier dans lequel les logs applicatifs seront écrits.
+
+#### `management.endpoints`
+
+Expose certains endpoints techniques comme `/actuator/health`.
+
+---
+
+# 15. Variables d’environnement
+
+## Définir une variable temporaire
+
+```bash
+export SPRING_PROFILES_ACTIVE=prod
+```
+
+### Rôle
+
+Définit une variable uniquement pour la session courante.
+
+---
+
+## Utiliser une variable dans Spring Boot
+
+```bash
+java -jar myapp.jar
+```
+
+Avec :
+
+```bash
+export SPRING_PROFILES_ACTIVE=prod
+```
+
+Spring Boot détecte automatiquement la variable.
+
+---
+
+## Exemple avec mot de passe externe
+
+```bash
+export DB_PASSWORD=secret
+```
+
+Dans `application-prod.yml` :
+
+```yaml
+spring:
+  datasource:
+    password: ${DB_PASSWORD}
+```
+
+### Rôle
+
+Évite de mettre le mot de passe en dur dans le fichier de configuration.
+
+---
+
+# 16. Créer un service Linux systemd
+
+## Créer le fichier service
+
+```bash
+sudo nano /etc/systemd/system/myapp.service
+```
+
+### Rôle
+
+Déclare l’application comme un service Linux.
+
+---
+
+## Exemple complet
+
+```ini
+[Unit]
+Description=My Spring Boot Application
+After=network.target
+
+[Service]
+User=springapp
+WorkingDirectory=/opt/myapp
+ExecStart=/usr/bin/java -jar /opt/myapp/myapp.jar --spring.config.location=file:/opt/myapp/config/application-prod.yml
+SuccessExitStatus=143
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
+```
+
+---
+
+## Rôle des sections
+
+### `[Unit]`
+
+Contient les informations générales du service.
+
+### `Description`
+
+Description lisible du service.
+
+### `After=network.target`
+
+Indique que le service démarre après l’initialisation réseau.
+
+### `[Service]`
+
+Décrit comment lancer le service.
+
+### `User=springapp`
+
+Exécute l’application avec l’utilisateur `springapp`.
+
+### `WorkingDirectory=/opt/myapp`
+
+Définit le dossier de travail.
+
+### `ExecStart`
+
+Commande utilisée pour lancer l’application.
+
+### `SuccessExitStatus=143`
+
+Indique que le code 143 peut être considéré comme un arrêt normal.
+
+### `Restart=always`
+
+Redémarre automatiquement l’application si elle tombe.
+
+### `RestartSec=10`
+
+Attend 10 secondes avant de redémarrer.
+
+### `[Install]`
+
+Permet d’activer le service au démarrage du serveur.
+
+---
+
+# 17. Gérer le service systemd
+
+## Recharger systemd
+
+```bash
+sudo systemctl daemon-reload
+```
+
+### Rôle
+
+Recharge la configuration des services après création ou modification d’un fichier `.service`.
+
+---
+
+## Activer le démarrage automatique
+
+```bash
+sudo systemctl enable myapp
+```
+
+### Rôle
+
+Lance automatiquement l’application au démarrage du VPS.
+
+---
+
+## Démarrer le service
+
+```bash
+sudo systemctl start myapp
+```
+
+### Rôle
+
+Démarre l’application.
+
+---
+
+## Arrêter le service
+
+```bash
+sudo systemctl stop myapp
+```
+
+### Rôle
+
+Arrête l’application.
+
+---
+
+## Redémarrer le service
+
+```bash
+sudo systemctl restart myapp
+```
+
+### Rôle
+
+Arrête puis relance l’application.
+
+---
+
+## Voir le statut
+
+```bash
+sudo systemctl status myapp
+```
+
+### Rôle
+
+Affiche l’état du service :
+
+- actif ;
+- en erreur ;
+- PID ;
+- derniers logs ;
+- code de sortie.
+
+---
+
+## Voir les logs du service
+
+```bash
+journalctl -u myapp -f
+```
+
+### Rôle
+
+Affiche les logs du service en temps réel.
+
+---
+
+## Voir les 200 dernières lignes
+
+```bash
+journalctl -u myapp -n 200
+```
+
+### Rôle
+
+Utile pour analyser les erreurs récentes.
+
+---
+
+# 18. Déploiement ou redéploiement propre
+
+## Arrêter l’application
+
+```bash
+sudo systemctl stop myapp
+```
+
+### Rôle
+
+Arrête le service avant remplacement du JAR.
+
+---
+
+## Sauvegarder l’ancien JAR
+
+```bash
+cp /opt/myapp/myapp.jar /opt/myapp/myapp.jar.bak
+```
+
+### Rôle
+
+Permet un rollback rapide si la nouvelle version échoue.
+
+---
+
+## Copier le nouveau JAR
+
+```bash
+cp /tmp/myapp-new.jar /opt/myapp/myapp.jar
+```
+
+### Rôle
+
+Remplace l’ancienne version par la nouvelle.
+
+---
+
+## Redonner les droits
+
+```bash
+chown springapp:springapp /opt/myapp/myapp.jar
+```
+
+### Rôle
+
+S’assure que l’utilisateur applicatif peut lire le JAR.
+
+---
+
+## Redémarrer
+
+```bash
+sudo systemctl start myapp
+```
+
+### Rôle
+
+Relance l’application.
+
+---
+
+## Vérifier
+
+```bash
+sudo systemctl status myapp
+curl http://localhost:8080/actuator/health
+```
+
+### Rôle
+
+Confirme que le service et l’application sont opérationnels.
+
+---
+
+# 19. Installer et configurer Nginx
+
+## Installer Nginx
+
+```bash
+sudo apt install nginx -y
+```
+
+### Rôle
+
+Installe un serveur web qui servira de reverse proxy.
+
+---
+
+## Pourquoi utiliser Nginx ?
+
+Nginx permet :
+
+- d’exposer l’application sur le port 80 ou 443 ;
+- de cacher le port interne 8080 ;
+- de gérer HTTPS ;
+- de faire du reverse proxy ;
+- de gérer les headers HTTP ;
+- de mieux sécuriser l’exposition publique.
+
+---
+
+## Créer la configuration Nginx
+
+```bash
+sudo nano /etc/nginx/sites-available/myapp
+```
+
+### Rôle
+
+Crée une configuration dédiée à l’application.
+
+---
+
+## Exemple de configuration
+
+```nginx
+server {
+    listen 80;
+    server_name mon-domaine.com;
+
+    location / {
+        proxy_pass http://localhost:8080;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+```
+
+---
+
+## Rôle des directives Nginx
+
+### `listen 80`
+
+Nginx écoute sur le port HTTP standard.
+
+### `server_name`
+
+Nom de domaine associé à l’application.
+
+### `location /`
+
+Toutes les requêtes entrantes sont traitées ici.
+
+### `proxy_pass`
+
+Redirige les requêtes vers Spring Boot.
+
+### `proxy_set_header Host`
+
+Transmet le nom de domaine original.
+
+### `X-Real-IP`
+
+Transmet l’adresse IP réelle du client.
+
+### `X-Forwarded-For`
+
+Transmet la chaîne des proxys traversés.
+
+### `X-Forwarded-Proto`
+
+Indique si la requête initiale était en HTTP ou HTTPS.
+
+---
+
+## Activer la configuration
+
+```bash
+sudo ln -s /etc/nginx/sites-available/myapp /etc/nginx/sites-enabled/
+```
+
+### Rôle
+
+Active la configuration Nginx via un lien symbolique.
+
+---
+
+## Tester la configuration Nginx
+
+```bash
+sudo nginx -t
+```
+
+### Rôle
+
+Vérifie que la configuration Nginx est correcte.
+
+---
+
+## Redémarrer Nginx
+
+```bash
+sudo systemctl restart nginx
+```
+
+### Rôle
+
+Applique la nouvelle configuration.
+
+---
+
+## Voir le statut Nginx
+
+```bash
+sudo systemctl status nginx
+```
+
+### Rôle
+
+Vérifie si Nginx fonctionne correctement.
+
+---
+
+# 20. HTTPS avec Let’s Encrypt
+
+## Installer Certbot
+
+```bash
+sudo apt install certbot python3-certbot-nginx -y
+```
+
+### Rôle
+
+Installe l’outil permettant de générer un certificat HTTPS gratuit.
+
+---
+
+## Générer le certificat
+
+```bash
+sudo certbot --nginx -d mon-domaine.com
+```
+
+### Rôle
+
+Crée un certificat SSL et modifie automatiquement la configuration Nginx.
+
+---
+
+## Tester le renouvellement
+
+```bash
+sudo certbot renew --dry-run
+```
+
+### Rôle
+
+Vérifie que le renouvellement automatique du certificat fonctionne.
+
+---
+
+# 21. Firewall avec UFW
+
+## Autoriser SSH
+
+```bash
+sudo ufw allow OpenSSH
+```
+
+### Rôle
+
+Autorise les connexions SSH.
+
+---
+
+## Autoriser HTTP
+
+```bash
+sudo ufw allow 80
+```
+
+### Rôle
+
+Autorise le trafic web HTTP.
+
+---
+
+## Autoriser HTTPS
+
+```bash
+sudo ufw allow 443
+```
+
+### Rôle
+
+Autorise le trafic web HTTPS.
+
+---
+
+## Activer le firewall
+
+```bash
+sudo ufw enable
+```
+
+### Rôle
+
+Active le pare-feu.
+
+---
+
+## Voir le statut
+
+```bash
+sudo ufw status
+```
+
+### Rôle
+
+Affiche les règles actives.
+
+---
+
+## Bonne pratique
+
+Ne pas exposer directement le port `8080` si Nginx fait le reverse proxy.
+
+---
+
+# 22. Diagnostic applicatif
+
+## Vérifier que l’application écoute
+
+```bash
+ss -tulnp | grep 8080
+```
+
+### Rôle
+
+Confirme que Spring Boot écoute bien sur le port 8080.
+
+---
+
+## Tester la santé Spring Boot
+
+```bash
+curl http://localhost:8080/actuator/health
+```
+
+### Rôle
+
+Teste l’état technique de l’application.
+
+---
+
+## Tester via Nginx
+
+```bash
+curl http://mon-domaine.com/actuator/health
+```
+
+### Rôle
+
+Vérifie que le flux externe fonctionne jusqu’à Spring Boot.
+
+---
+
+## Voir les logs applicatifs
+
+```bash
+tail -f /opt/myapp/logs/myapp.log
+```
+
+### Rôle
+
+Suit les logs générés par Spring Boot.
+
+---
+
+## Voir les logs systemd
+
+```bash
+journalctl -u myapp -f
+```
+
+### Rôle
+
+Suit les logs du service Linux.
+
+---
+
+## Voir les logs Nginx
+
+```bash
+tail -f /var/log/nginx/access.log
+tail -f /var/log/nginx/error.log
+```
+
+### Rôle
+
+Analyse les appels HTTP et les erreurs Nginx.
+
+---
+
+# 23. Erreurs fréquentes et commandes utiles
+
+## Application ne démarre pas
+
+```bash
+journalctl -u myapp -n 200
+```
+
+### Rôle
+
+Voir les dernières erreurs du service.
+
+---
+
+## Port déjà utilisé
+
+```bash
+lsof -i :8080
+```
+
+### Rôle
+
+Identifier le processus qui utilise déjà le port.
+
+---
+
+## Nginx retourne 502 Bad Gateway
+
+```bash
+sudo systemctl status myapp
+curl http://localhost:8080
+tail -f /var/log/nginx/error.log
+```
+
+### Rôle
+
+Vérifier si Spring Boot est démarré et accessible localement.
+
+---
+
+## Fichier de configuration non trouvé
+
+```bash
+ls -la /opt/myapp/config
+cat /opt/myapp/config/application-prod.yml
+```
+
+### Rôle
+
+Vérifier que le fichier existe et que le chemin est correct.
+
+---
+
+## Problème de droits
+
+```bash
+ls -la /opt/myapp
+chown -R springapp:springapp /opt/myapp
+```
+
+### Rôle
+
+Vérifier et corriger les permissions.
+
+---
+
+# 24. Exemple complet de scénario de déploiement
+
+## Étape 1 : mise à jour du VPS
+
+```bash
+sudo apt update && sudo apt upgrade -y
+```
+
+### Rôle
+
+Mettre le serveur à jour.
+
+---
+
+## Étape 2 : installer Java
+
+```bash
+sudo apt install openjdk-17-jdk -y
+java -version
+```
+
+### Rôle
+
+Installer et vérifier Java.
+
+---
+
+## Étape 3 : créer l’utilisateur
+
+```bash
+sudo adduser springapp
+sudo usermod -aG sudo springapp
+```
+
+### Rôle
+
+Créer un utilisateur dédié à l’application.
+
+---
+
+## Étape 4 : préparer les dossiers
+
+```bash
+sudo mkdir -p /opt/myapp/config
+sudo mkdir -p /opt/myapp/logs
+sudo chown -R springapp:springapp /opt/myapp
+```
+
+### Rôle
+
+Créer l’arborescence propre de l’application.
+
+---
+
+## Étape 5 : transférer le JAR
+
+```bash
+scp target/myapp.jar springapp@IP_DU_SERVEUR:/opt/myapp/myapp.jar
+```
+
+### Rôle
+
+Déposer l’application sur le VPS.
+
+---
+
+## Étape 6 : créer la configuration
+
+```bash
+nano /opt/myapp/config/application-prod.yml
+```
+
+### Rôle
+
+Créer la configuration externe.
+
+---
+
+## Étape 7 : tester manuellement
+
+```bash
+java -jar /opt/myapp/myapp.jar \
+  --spring.config.location=file:/opt/myapp/config/application-prod.yml
+```
+
+### Rôle
+
+Valider que l’application démarre avant de créer le service.
+
+---
+
+## Étape 8 : créer le service
+
+```bash
+sudo nano /etc/systemd/system/myapp.service
+```
+
+### Rôle
+
+Créer le service Linux.
+
+---
+
+## Étape 9 : activer le service
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable myapp
+sudo systemctl start myapp
+sudo systemctl status myapp
+```
+
+### Rôle
+
+Activer et lancer l’application comme service permanent.
+
+---
+
+## Étape 10 : installer Nginx
+
+```bash
+sudo apt install nginx -y
+```
+
+### Rôle
+
+Installer le reverse proxy.
+
+---
+
+## Étape 11 : configurer Nginx
+
+```bash
+sudo nano /etc/nginx/sites-available/myapp
+sudo ln -s /etc/nginx/sites-available/myapp /etc/nginx/sites-enabled/
+sudo nginx -t
+sudo systemctl restart nginx
+```
+
+### Rôle
+
+Exposer Spring Boot via HTTP.
+
+---
+
+## Étape 12 : activer HTTPS
+
+```bash
+sudo apt install certbot python3-certbot-nginx -y
+sudo certbot --nginx -d mon-domaine.com
+```
+
+### Rôle
+
+Sécuriser l’application avec HTTPS.
+
+---
+
+# 25. Checklist finale de production
+
+```bash
+java -version
+sudo systemctl status myapp
+curl http://localhost:8080/actuator/health
+sudo nginx -t
+sudo systemctl status nginx
+sudo ufw status
+journalctl -u myapp -n 100
+```
+
+## Points à vérifier
+
+- Java est installé.
+- Le JAR est présent.
+- Le fichier de configuration existe.
+- Le service démarre.
+- Le port 8080 écoute localement.
+- Nginx fonctionne.
+- Le domaine pointe vers le VPS.
+- HTTPS est actif.
+- Le firewall autorise 80, 443 et SSH.
+- Les logs sont consultables.
+
+---
+
+# 26. Architecture cible
+
+```text
+Utilisateur
+   |
+   | HTTPS
+   v
+Nginx :443
+   |
+   | reverse proxy
+   v
+Spring Boot :8080
+   |
+   v
+Base de données / APIs externes
+```
+
+---
+
+# 27. Commandes essentielles à retenir
+
+```bash
+ssh user@ip
+ls -la
+cd /opt/myapp
+cat fichier
+nano fichier
+tail -f fichier.log
+grep "ERROR" fichier.log
+ps aux | grep java
+ss -tulnp
+curl http://localhost:8080/actuator/health
+sudo systemctl status myapp
+sudo systemctl restart myapp
+journalctl -u myapp -f
+sudo nginx -t
+sudo systemctl restart nginx
+sudo ufw status
+```
+
+---
+
+# 28. Bonnes pratiques
+
+## Sécurité
+
+- Ne pas lancer l’application en root.
+- Utiliser un utilisateur dédié.
+- Ne pas exposer directement le port 8080.
+- Utiliser HTTPS.
+- Ne pas stocker les mots de passe en clair si possible.
+- Utiliser des variables d’environnement pour les secrets.
+
+## Exploitation
+
+- Centraliser les logs.
+- Activer `/actuator/health`.
+- Sauvegarder l’ancien JAR avant redéploiement.
+- Vérifier les logs après chaque redémarrage.
+- Documenter les ports, chemins et services.
+
+## Déploiement
+
+- Toujours tester le JAR manuellement avant `systemd`.
+- Toujours tester Nginx avec `nginx -t`.
+- Toujours vérifier `systemctl status`.
+- Garder une version `.bak` du JAR précédent.
+
+---
+
+# 29. Mini procédure rollback
+
+## Restaurer l’ancien JAR
+
+```bash
+sudo systemctl stop myapp
+cp /opt/myapp/myapp.jar.bak /opt/myapp/myapp.jar
+sudo chown springapp:springapp /opt/myapp/myapp.jar
+sudo systemctl start myapp
+sudo systemctl status myapp
+```
+
+### Rôle
+
+Permet de revenir rapidement à la version précédente en cas d’échec du nouveau déploiement.
+
+---
+
+# 30. Résumé
+
+Ce guide couvre les bases nécessaires pour :
+
+- administrer un VPS Linux ;
+- comprendre le rôle des commandes principales ;
+- déployer une application Java Spring Boot ;
+- gérer une configuration externe ;
+- créer un service systemd ;
+- exposer l’application avec Nginx ;
+- sécuriser avec HTTPS ;
+- diagnostiquer les erreurs courantes.
+
+Le modèle recommandé est :
+
+```text
+VPS Linux
+  ├── Java 17
+  ├── /opt/myapp/myapp.jar
+  ├── /opt/myapp/config/application-prod.yml
+  ├── systemd pour lancer l’application
+  ├── Nginx comme reverse proxy
+  └── HTTPS avec Let’s Encrypt
+```
