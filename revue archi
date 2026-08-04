@@ -1,0 +1,158 @@
+---
+name: revue-architecture-spring
+description: Revue d'architecture d'une application Spring Boot  — découpage en couches (controller / service / repository / domaine), sens des dépendances entre packages, injection de dépendances, cycle de vie des beans, profils et configuration, et surtout la gestion transactionnelle (@Transactional mal placé, auto-invocation, readOnly, propagation, rollback, LazyInitializationException, Open Session In View). Utilise systématiquement ce skill dès qu'on te demande d'auditer la structure, l'architecture, le découpage, les couches, l'organisation des packages, la configuration ou le comportement transactionnel d'un projet Spring Boot — y compris quand la question porte sur "où mettre cette logique", "est-ce que mon découpage est bon", un problème de transaction, de bean, de proxy ou de dépendance circulaire.
+---
+
+# Revue d'architecture Spring Boot
+
+Cible : la **structure** et le **comportement d'infrastructure**, pas le style du code
+(ça, c'est le rôle d'une revue Clean Code). Les erreurs de cette catégorie sont sournoises :
+le code compile, les tests unitaires passent, et le bug n'apparaît qu'en production sous charge
+ou sur un cas de rollback.
+
+## Déroulé
+
+1. **Reconstituer la carte.** Liste les packages de premier niveau et le rôle de chacun.
+   Identifie le style visé : couches classiques, hexagonal/ports-adapters, ou découpage par
+   feature (`order/`, `billing/`…). Juge la cohérence **par rapport au style visé**, pas par
+   rapport à un idéal théorique.
+2. **Vérifier le sens des dépendances** (voir ci-dessous).
+3. **Dérouler les checklists** DI, transactions, config, API.
+4. **Rapport** au format imposé en fin de skill.
+
+Commandes utiles pour dégrossir quand tu as accès au dépôt :
+
+```bash
+# entités JPA exposées directement par les controllers
+grep -rn "@RestController" -A40 src/main/java | grep -E "@Entity|Entity\b"
+# @Transactional posé sur des méthodes non publiques ou sur le controller
+grep -rn "@Transactional" src/main/java | head -50
+# injection par champ
+grep -rn "@Autowired" src/main/java
+# fuite du web dans le domaine
+grep -rln "org.springframework.web\|jakarta.servlet" src/main/java/**/domain*
+```
+
+## 1. Couches et sens des dépendances
+
+Règle de base : les dépendances pointent vers le domaine, jamais l'inverse.
+`controller → service → repository`, et le domaine ne connaît ni le web ni la persistance.
+
+À signaler :
+- **Controller qui parle au repository** en court-circuitant le service (aucune transaction,
+  aucune règle métier appliquée).
+- **Entité JPA en entrée ou sortie de controller.** Fuite du modèle de persistance dans le
+  contrat d'API : toute évolution du schéma casse les clients, et en entrée cela ouvre le
+  *mass assignment* (voir la revue sécurité). Imposer des DTO / records dédiés.
+- **Service → Controller** ou service qui manipule `HttpServletRequest` / `ResponseEntity`.
+- **Dépendances circulaires entre services** (A→B→A). Symptôme d'un découpage raté : extraire
+  la responsabilité commune dans un troisième composant. `@Lazy` pour casser le cycle est un
+  pansement, à signaler comme majeur.
+- **Repository appelé depuis plusieurs services pour la même agrégat** sans propriétaire clair.
+- **Mapping** dispersé : entité↔DTO fait tantôt dans le controller, tantôt dans le service.
+  Centraliser (mapper dédié, MapStruct, ou méthode de fabrique sur le DTO).
+- **Package `utils`/`common`/`helper` fourre-tout** dont tout le monde dépend.
+
+## 2. Injection de dépendances et beans
+
+- **Injection par champ** (`@Autowired` sur un attribut) : empêche les champs `final`, masque
+  les dépendances excessives, complique les tests. → injection par constructeur (un seul
+  constructeur : `@Autowired` est même inutile ; `@RequiredArgsConstructor` fonctionne bien).
+- **`new` sur un composant qui devrait être un bean** : les proxys Spring (transactions, cache,
+  sécurité, métriques) ne s'appliquent pas à une instance construite à la main. Cause n°1 de
+  « mon `@Transactional` ne fait rien ».
+- **État mutable dans un singleton** : un `@Service` est partagé par tous les threads HTTP.
+  Champ non-`final` alimenté par une requête = corruption de données sous charge.
+- **`@Scope("prototype")` injecté dans un singleton** sans `ObjectProvider`/`@Lookup` :
+  une seule instance sera créée, contrairement à l'intention.
+- **Beans définis à la fois par `@Component` et par `@Bean`** dans une `@Configuration` (doublon).
+- **`@ComponentScan` élargi manuellement** ou classe principale placée hors du package racine :
+  scan involontaire de dépendances tierces.
+- **Logique dans un constructeur ou `@PostConstruct`** qui fait des appels réseau/BDD :
+  démarrage fragile. Préférer `ApplicationReadyEvent`.
+
+## 3. Transactions — le point le plus rentable de la revue
+
+- **Auto-invocation** : une méthode annotée `@Transactional` appelée depuis une autre méthode
+  de la **même classe** via `this` ne passe pas par le proxy → aucune transaction.
+  Correction : extraire dans un autre bean (ou, en dernier recours, `TransactionTemplate`).
+- **`@Transactional` sur une méthode `private`, `protected`, `final`, ou sur une classe `final`** :
+  silencieusement ignoré avec les proxys JDK/CGLIB.
+- **Placement** : la transaction appartient au **service** (frontière du cas d'usage), pas au
+  repository (déjà transactionnel par méthode) ni au controller (transaction ouverte pendant
+  la sérialisation).
+- **Rollback** : par défaut, Spring ne rollback **que** sur `RuntimeException` et `Error`.
+  Une exception vérifiée laisse la transaction committer → exiger `rollbackFor` explicite ou
+  des exceptions métier non vérifiées.
+- **Try/catch qui avale l'exception à l'intérieur d'une méthode transactionnelle** : la
+  transaction est déjà marquée *rollback-only*, le commit final lèvera
+  `UnexpectedRollbackException`.
+- **Appels réseau (HTTP, mail, S3, Kafka) à l'intérieur d'une transaction** : la connexion BDD
+  est monopolisée pendant toute la latence externe → épuisement du pool. Sortir l'appel de la
+  transaction, ou le déclencher après commit
+  (`@TransactionalEventListener(phase = AFTER_COMMIT)`).
+- **`readOnly = true` manquant** sur les méthodes de lecture : on perd l'optimisation Hibernate
+  (pas de *dirty checking*, pas de snapshot) et le routage vers un réplica de lecture.
+- **Propagation** : `REQUIRES_NEW` utilisé sans conscience du fait qu'il consomme une
+  **seconde connexion** (risque de deadlock si le pool est petit). `NESTED` non supporté par
+  tous les drivers.
+- **`LazyInitializationException`** : symptôme d'un accès à une relation `LAZY` hors transaction.
+  La bonne correction est de charger ce qu'il faut dans la transaction
+  (`JOIN FETCH`, `@EntityGraph`, projection) — **pas** d'activer Open Session In View ni de
+  passer la relation en `EAGER`.
+- **Open Session In View** (activé par défaut dans Spring Boot) : signale-le et recommande
+  `spring.jpa.open-in-view=false`, en prévenant que cela révélera les chargements paresseux
+  mal maîtrisés (c'est le but).
+- **Modification d'entité sans `save()`** hors transaction : rien n'est persisté ; à l'inverse,
+  dans une transaction, le *dirty checking* persiste des modifications parfois involontaires.
+
+## 4. Configuration, profils, démarrage
+
+- Valeurs `@Value("${...}")` éparpillées → regrouper en `@ConfigurationProperties` typées et validées (`@Validated`).
+- Secrets, URL de prod ou mots de passe en dur dans `application.yml` versionné → bloquant.
+- `ddl-auto: update` ou `create-drop` hors profil de test → bloquant en production ; imposer
+  Flyway ou Liquibase.
+- Profils : comportement métier qui diffère selon `@Profile` sans que ce soit documenté.
+- Absence de timeouts, de pool sizing (`hikari`), ou de configuration d'`actuator` maîtrisée.
+- Migrations non idempotentes ou modifiant des scripts déjà appliqués (checksum Flyway).
+
+## 5. Contrat d'API
+
+- Statuts HTTP incohérents (200 pour une création, 200 pour une erreur métier).
+- Absence de `@ControllerAdvice` centralisant la traduction exception → réponse d'erreur,
+  ou trace technique renvoyée au client.
+- `@Valid` absent sur les `@RequestBody` alors que des contraintes Bean Validation existent.
+- Pas de pagination sur les endpoints de liste.
+- Rupture de compatibilité (champ renommé/supprimé) sans versionnement.
+
+## Format du rapport
+
+```markdown
+## Carte de l'application
+Style d'architecture identifié + schéma texte des dépendances entre packages.
+
+## Constats
+
+### 🔴 Bloquants
+**[A1] Titre** — `src/main/java/.../OrderService.java:42`
+- *Problème* : …
+- *Effet en production* : … (le lecteur doit voir le bug se produire)
+- *Correction* :
+```java
+// avant / après, minimal
+```
+
+### 🟠 Majeurs
+### 🟡 Mineurs
+Une ligne par point.
+
+## Points solides
+
+## Plan d'action
+1. Corrections transactionnelles (risque de données) — effort S/M/L
+2. Redécoupage / dépendances
+3. Configuration
+```
+
+Priorise toujours les constats transactionnels et les dépendances inversées : ce sont eux qui
+produisent des incidents. Un package mal nommé peut attendre.
