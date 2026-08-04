@@ -1,0 +1,162 @@
+---
+name: revue-securite-performance-spring
+description: Revue de sécurité et de performance d'une application Java / Spring Boot  — injections SQL et JPQL, mass assignment, contrôle d'accès manquant ou contournable (IDOR), CORS/CSRF, secrets en dur, exposition d'Actuator, fuites de données dans les logs et les erreurs, puis côté performance les requêtes N+1, le fetch EAGER, l'absence de pagination, les timeouts manquants sur les appels sortants, le cache, le pool de connexions et les traitements de masse. Utilise systématiquement ce skill dès qu'on parle d'audit de sécurité, de faille, de vulnérabilité, de durcissement, ou de lenteur, de temps de réponse, de requêtes SQL trop nombreuses, de charge, de timeout ou d'optimisation sur un projet Spring Boot — même si la demande est formulée vaguement ("mon API est lente", "est-ce que c'est sécurisé ?").
+---
+
+# Revue sécurité & performance (Spring Boot)
+
+Deux axes réunis parce qu'ils se lisent au même endroit : la frontière entre l'application, la
+base et le monde extérieur. Chaque constat doit dire **ce qu'un attaquant obtient** ou
+**combien ça coûte en requêtes / latence**, sinon il ne sera pas priorisé.
+
+## Déroulé
+
+1. Recenser les points d'entrée (controllers, listeners Kafka/JMS, jobs planifiés, endpoints
+   Actuator) et les points de sortie (BDD, HTTP sortant, fichiers, logs).
+2. Passer la checklist sécurité, puis la checklist performance.
+3. Pour la performance, raisonner en **nombre de requêtes SQL par appel** et en **volume
+   chargé en mémoire** : ce sont les deux métriques qui expliquent la majorité des incidents.
+4. Rapport au format imposé.
+
+Repérage rapide sur un dépôt :
+
+```bash
+# concaténation dans des requêtes
+grep -rn "createQuery(\|createNativeQuery(\|jdbcTemplate" src/main/java | grep -E '\+|String.format'
+# relations chargées en EAGER + collections
+grep -rn "FetchType.EAGER\|@OneToMany\|@ManyToMany" src/main/java
+# endpoints sans contrôle d'accès
+grep -rn "@GetMapping\|@PostMapping\|@PutMapping\|@DeleteMapping" src/main/java | wc -l
+grep -rn "@PreAuthorize\|@Secured\|hasRole\|hasAuthority" src/main/java | wc -l
+# secrets et configuration sensible
+grep -rniE "password|secret|api[-_]?key|token" src/main/resources/application*
+grep -rn "management.endpoints" src/main/resources/
+# appels sortants sans timeout
+grep -rn "RestTemplate\|WebClient\|HttpClient" src/main/java
+```
+
+## Sécurité
+
+**Injection**
+- Concaténation de paramètres dans `createQuery`, `createNativeQuery`, `jdbcTemplate.query`,
+  ou dans un `@Query` construit dynamiquement → paramètres nommés / `?` obligatoires.
+- Tri et pagination dynamiques (`ORDER BY ${sort}`) : non paramétrables en SQL, donc à valider
+  contre une liste blanche de colonnes.
+- Injection SpEL dans `@PreAuthorize` ou `@Value` construits à partir d'entrées utilisateur.
+- Path traversal : nom de fichier venant du client concaténé à un chemin → normaliser et
+  vérifier que le chemin résolu reste dans le répertoire autorisé.
+- Désérialisation d'objets Java non fiables, `ObjectMapper.enableDefaultTyping()` /
+  `activateDefaultTyping` : exécution de code à distance.
+
+**Contrôle d'accès**
+- **IDOR** : endpoint qui charge une ressource par identifiant sans vérifier que l'utilisateur
+  courant en est propriétaire. Le contrôle doit être dans la requête
+  (`findByIdAndOwner(id, principal)`) ou explicite dans le service — pas seulement dans l'IHM.
+- Endpoints métier sans `@PreAuthorize` alors que le reste du projet en utilise (incohérence).
+- Règle de sécurité posée uniquement au niveau de l'URL (`requestMatchers`) alors que les
+  routes évoluent : préférer aussi une sécurité méthode.
+- `permitAll()` large, `anyRequest().permitAll()`, ou filtre de sécurité désactivé « pour les tests ».
+- Élévation de privilège par *mass assignment* : `@RequestBody` lié directement à une entité,
+  permettant de fixer `role`, `actif`, `id` ou `solde`. → DTO d'entrée exposant uniquement les
+  champs modifiables.
+
+**Configuration & exposition**
+- `csrf().disable()` sur une application à sessions cookies (acceptable pour une API stateless
+  à jeton, à condition de le justifier — signale-le comme point à confirmer, pas comme faux positif).
+- CORS avec `allowedOrigins("*")` combiné à `allowCredentials(true)` : combinaison invalide et dangereuse.
+- Actuator : `management.endpoints.web.exposure.include=*`, `/env`, `/heapdump`, `/threaddump`
+  accessibles sans authentification → bloquant.
+- Secrets en dur dans le code ou dans un `application.yml` versionné ; clé de signature JWT
+  faible ou partagée entre environnements.
+- Swagger / console H2 exposés en production.
+
+**Authentification & données**
+- Mots de passe hachés en MD5/SHA-1, ou stockés en clair → BCrypt/Argon2 via `PasswordEncoder`.
+- JWT : signature non vérifiée, algorithme `none` accepté, `exp` ignoré, secret symétrique
+  court, absence de mécanisme de révocation.
+- Données personnelles ou jetons écrits dans les logs (`log.info("payload {}", request)`),
+  ou `toString()` d'entité contenant des champs sensibles.
+- Messages d'erreur renvoyant la stack trace ou le SQL au client
+  (`server.error.include-stacktrace: always`).
+- Absence de limitation de débit sur les endpoints d'authentification.
+- Dépendances vulnérables : vérifier les versions de Spring Boot / Jackson / Log4j si le
+  `pom.xml` ou `build.gradle` est fourni.
+
+## Performance
+
+**Accès aux données — la source dominante**
+- **N+1** : une boucle sur une collection d'entités qui accède à une relation `LAZY`, ou un
+  mapping DTO qui déclenche un chargement par élément. Corriger avec `JOIN FETCH`,
+  `@EntityGraph`, `@BatchSize`, ou une projection dédiée. Chiffre le coût : « 1 + N requêtes,
+  soit ~200 requêtes pour une page de 200 lignes ».
+- `FetchType.EAGER` (valeur par défaut pour `@ManyToOne` et `@OneToOne`) : chaque chargement
+  tire tout le graphe. Passer en `LAZY` explicite.
+- `findAll()` sans pagination, ou pagination faite en mémoire (`stream().skip().limit()`).
+- **`JOIN FETCH` d'une collection + pagination** : Hibernate pagine en mémoire après avoir tout
+  chargé (avertissement `HHH000104`) — grave et souvent invisible en dev.
+- Filtrage ou agrégation faits en Java sur un `findAll()` alors que la base peut le faire.
+- Absence d'index sur les colonnes utilisées dans les `WHERE`/`JOIN` fréquents et sur les clés étrangères.
+- Insertions/updates de masse un par un au lieu de `saveAll` + `hibernate.jdbc.batch_size`,
+  sans `flush()`/`clear()` périodique (le contexte de persistance enfle jusqu'à l'OOM).
+- Chargement d'entités complètes quand une projection (interface ou record) suffirait.
+
+**Appels sortants et ressources**
+- `RestTemplate`/`WebClient` sans **timeout de connexion ni de lecture** : un service externe
+  lent bloque les threads Tomcat jusqu'à l'indisponibilité totale. Toujours bloquant.
+- Pas de retry borné, pas de circuit breaker sur les appels critiques.
+- Nouvelle instance de client HTTP créée à chaque appel (pas de pool de connexions).
+- Ressources non fermées (`InputStream`, `Stream` JPA) hors try-with-resources.
+- Pool Hikari mal dimensionné par rapport aux `REQUIRES_NEW` et aux traitements longs.
+- Chargement complet d'un fichier ou d'un export en mémoire au lieu d'un streaming.
+
+**Cache et concurrence**
+- `@Cacheable` sans TTL ni stratégie d'éviction, ou clé de cache incluant un objet sans
+  `equals/hashCode` fiable.
+- `@Cacheable` sur une méthode appelée depuis la même classe : proxy contourné, cache inopérant.
+- Cache local (Caffeine) sur une application multi-instances où la cohérence compte.
+- Absence de verrouillage optimiste (`@Version`) sur des entités modifiées concurremment
+  → écrasements silencieux (« lost update »).
+- `synchronized` sur un bean singleton comme substitut à un verrou distribué.
+
+## Format du rapport
+
+```markdown
+## Résumé exécutif
+Niveau de risque global (faible / modéré / élevé) et les 3 points à traiter en premier.
+
+## Sécurité
+
+### 🔴 Critique
+**[S1] Titre** — `.../UserController.java:57`
+- *Faille* : …
+- *Exploitation* : ce qu'un attaquant obtient concrètement, en une phrase.
+- *Correction* :
+```java
+// code corrigé
+```
+
+### 🟠 Élevé / 🟡 Modéré
+
+## Performance
+
+### 🔴 Critique
+**[P1] Titre** — `.../OrderService.java:88`
+- *Coût mesuré/estimé* : ex. 1 + N requêtes → ~400 par appel de page.
+- *Correction* :
+```java
+@EntityGraph(attributePaths = "lignes")
+List<Commande> findByStatut(Statut statut);
+```
+
+### 🟠 Élevé / 🟡 Modéré
+
+## Points solides
+
+## Plan d'action
+1. … (impact / effort)
+```
+
+Deux règles de rédaction : ne jamais annoncer une faille sans décrire son exploitation, ne
+jamais annoncer un problème de performance sans un ordre de grandeur. Si un point dépend du
+contexte de déploiement (API interne, réseau privé, volumétrie faible), pose la question au
+lieu d'affirmer.
