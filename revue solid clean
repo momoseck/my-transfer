@@ -1,0 +1,145 @@
+---
+name: revue-solid-clean-code
+description: Revue de code Java / Spring Boot centrée sur les principes SOLID, DRY, KISS, YAGNI et le Clean Code (nommage, taille des méthodes, couplage, God classes, gestion des exceptions, Optional, immutabilité, abus de Lombok). Utilise systématiquement ce skill dès qu'un utilisateur demande une revue, un audit, un "code review", un avis sur la qualité, la lisibilité, la maintenabilité ou le respect des bonnes pratiques d'un code Java ou Spring Boot — y compris quand il colle simplement une classe, un service ou une pull request en demandant "qu'est-ce que tu en penses ?" ou "comment améliorer ça ?", sans citer explicitement SOLID.
+---
+
+# Revue SOLID & Clean Code (Java / Spring Boot)
+
+Objectif : produire une revue **actionnable et hiérarchisée**, pas une liste de reproches.
+Un développeur doit pouvoir corriger les points bloquants en priorité et comprendre *pourquoi*
+chaque point compte, avec le code de remplacement sous les yeux.
+
+## Déroulé de la revue
+
+1. **Cadrer le périmètre.** Diff / PR, une classe, un package, un module entier ? Si le
+   périmètre n'est pas évident, prends le plus restreint et dis-le en une phrase dans le résumé.
+2. **Lire d'abord, juger ensuite.** Repère l'intention du code (quelle règle métier il porte)
+   avant de commenter la forme. Un commentaire qui ignore l'intention sera rejeté par l'auteur.
+3. **Cartographier les responsabilités.** Pour chaque classe touchée : une phrase décrivant sa
+   raison de changer. Si la phrase contient « et », il y a une piste SRP.
+4. **Dérouler les checklists** ci-dessous.
+5. **Classer par sévérité** puis rédiger le rapport au format imposé plus bas.
+
+Ne signale pas ce qu'un formateur ou un linter (Spotless, Checkstyle, SonarLint) corrige tout
+seul : indentation, imports inutilisés, accolades. Ces remarques diluent les vraies.
+
+## Checklist SOLID appliquée à Spring
+
+**S — Responsabilité unique**
+- Service qui orchestre *et* mappe *et* valide *et* appelle une API externe *et* envoie un mail.
+- `@Service` de plus de ~300 lignes ou avec plus de 5-6 dépendances injectées : signal fort de God class.
+- Controller qui contient de la logique métier (calculs, conditions métier) au lieu de déléguer.
+- Entité JPA qui embarque de la logique de présentation ou d'appel externe.
+
+**O — Ouvert/fermé**
+- Chaînes de `if/else` ou `switch` sur un type/enum métier répétées à plusieurs endroits →
+  proposer une `Strategy` (souvent : `Map<TypeEnum, Handler>` alimentée par Spring via une
+  `List<Handler>` injectée, chaque handler exposant `supports(type)`).
+- Ajouter un cas métier oblige à modifier 4 classes existantes → conception fermée à l'extension.
+
+**L — Substitution de Liskov**
+- Sous-classe qui lève `UnsupportedOperationException` sur une méthode héritée.
+- Sous-classe qui durcit les préconditions (rejette des entrées que le parent acceptait).
+- Héritage utilisé pour réutiliser du code plutôt que pour modéliser un « est-un » → préférer la composition.
+
+**I — Ségrégation des interfaces**
+- Interface « fourre-tout » dont les implémentations laissent des méthodes vides.
+- Interface créée pour une unique implémentation sans besoin de test double ni de variation :
+  c'est de la cérémonie, signale-le en mineur.
+
+**D — Inversion des dépendances**
+- Service métier qui dépend d'un `RestTemplate`/`WebClient`/client SDK concret au lieu d'un port
+  (interface) défini côté domaine.
+- Couche métier qui importe `jakarta.servlet`, `org.springframework.web` ou des types JPA :
+  le domaine fuit vers l'infrastructure.
+
+## Checklist Clean Code
+
+**Nommage** — noms révélant l'intention (`calculerMontantTtc`, pas `process`, `doIt`, `data`,
+`tmp`, `list1`). Booléens en `estX`/`aX`/`peutX`. Cohérence de langue : ne pas mélanger français
+et anglais dans le même package (choisis la langue dominante du projet et signale les écarts).
+
+**Méthodes et classes**
+- Méthode > ~30 lignes ou avec plus de 2 niveaux d'imbrication : proposer une extraction nommée.
+- Plus de 3-4 paramètres → objet paramètre / record.
+- Paramètre booléen qui pilote deux comportements → deux méthodes.
+- Nombres et chaînes magiques → constantes nommées ou `@ConfigurationProperties`.
+
+**Gestion des erreurs**
+- `catch (Exception e)` générique, `catch` vide, ou qui log *et* relance (double log).
+- `e.printStackTrace()` ou `System.out.println` en lieu et place d'un logger.
+- Exception métier remplacée par un retour `null` ou `false` : l'appelant ne peut pas réagir.
+- Exceptions vérifiées propagées jusqu'au controller sans traduction.
+
+**Null & Optional**
+- `Optional` en paramètre de méthode ou en champ d'entité : mauvais usage, réserve-le aux retours.
+- `optional.get()` sans `isPresent()` → `orElseThrow(...)` avec une exception métier explicite.
+- Retourner `null` pour une collection → retourner une collection vide.
+
+**Immutabilité & état**
+- DTO mutables avec setters alors qu'un `record` suffirait.
+- Champs non-`final` dans un bean sans état, état mutable partagé dans un singleton Spring
+  (un `@Service` est singleton : tout champ mutable non thread-safe est un bug potentiel).
+- Collections internes exposées telles quelles par un getter (fuite de mutabilité).
+
+**Lombok**
+- `@Data` sur une entité JPA : `equals`/`hashCode` sur tous les champs + `toString` qui déclenche
+  le chargement des relations `LAZY`. Préférer `@Getter`, `@Setter` ciblés et un `equals` sur l'identifiant métier.
+- `@Builder` sans `@Builder.Default` sur des champs initialisés (valeurs silencieusement perdues).
+- `@SneakyThrows` qui masque des exceptions vérifiées.
+
+**Duplication & sur-conception**
+- DRY : 3 occurrences quasi identiques = extraction justifiée. 2 occurrences légèrement différentes :
+  souvent laisser vivre, la mauvaise abstraction coûte plus cher que la duplication.
+- YAGNI : abstractions, `Generic<T>` et points d'extension sans usage actuel → mineur, mais signale-le.
+
+**Commentaires & tests (survol)**
+- Commentaire qui paraphrase le code → supprimer ; commentaire qui explique un *pourquoi* → garder.
+- Code mort, blocs commentés, `TODO` sans référence de ticket.
+- Si les tests sont dans le périmètre : test sans assertion, `assertNotNull` seul, nommage
+  non descriptif, logique conditionnelle dans le test.
+
+## Sévérités
+
+| Niveau | Critère |
+|---|---|
+| 🔴 Bloquant | Bug latent, corruption de données, comportement faux en production |
+| 🟠 Majeur | Dette structurelle qui va coûter cher : God class, couplage fort, duplication massive |
+| 🟡 Mineur | Lisibilité, nommage, cérémonie inutile |
+| 🔵 Info | Suggestion, alternative idiomatique, question à l'auteur |
+
+En cas de doute sur l'intention de l'auteur, formule une question plutôt qu'une affirmation.
+
+## Format du rapport
+
+Utilise toujours cette structure :
+
+```markdown
+## Résumé
+2-4 phrases : périmètre revu, impression générale, les 2 risques principaux.
+
+## Constats
+
+### 🔴 Bloquants
+**[B1] Titre court du problème** — `src/main/java/.../OrderService.java:42`
+- *Problème* : ce qui ne va pas, factuellement.
+- *Pourquoi* : conséquence concrète (bug, coût de maintenance, principe violé).
+- *Correction* :
+```java
+// extrait de code de remplacement, compilable et minimal
+```
+
+### 🟠 Majeurs
+...
+### 🟡 Mineurs
+Liste condensée à une ligne par point, sans extrait de code.
+
+## Points solides
+Ce qui est bien fait — 2-3 points, sincères et précis.
+
+## Plan d'action
+1. ... (ordre de traitement conseillé, effort estimé : S / M / L)
+```
+
+Un extrait de correction par constat bloquant ou majeur, pas plus : la revue doit rester lisible.
+Si plus de 15 constats sortent, regroupe les mineurs par thème plutôt que de tout lister.
